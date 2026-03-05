@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Modsen.FinanceTracker.BLL\Modsen.FinanceTracker.BLL.csproj" />
     <ProjectReference Include="..\Modsen.FinanceTracker.Domain\Modsen.FinanceTracker.Domain.csproj" />
   </ItemGroup>
 
