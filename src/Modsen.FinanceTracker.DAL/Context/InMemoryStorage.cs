@@ -1,4 +1,5 @@
 ﻿using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.Domain.Enums;
 
 namespace Modsen.FinanceTracker.DAL.Context;
 
@@ -8,8 +9,8 @@ public static class InMemoryStorage
     
     public static List<Category> Categories { get; } = new()
     {
-        new Category(Guid.NewGuid(), "Salary", Domain.Enums.TransactionType.Income),
-        new Category(Guid.NewGuid(), "Food", Domain.Enums.TransactionType.Expense),
-        new Category(Guid.NewGuid(), "Transport", Domain.Enums.TransactionType.Expense)
+        new Category(Guid.NewGuid(), "Salary", TransactionType.Income),
+        new Category(Guid.NewGuid(), "Food", TransactionType.Expense),
+        new Category(Guid.NewGuid(), "Transport", TransactionType.Expense)
     };
 }

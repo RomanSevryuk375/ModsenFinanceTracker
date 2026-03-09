@@ -1,4 +1,8 @@
-﻿using Modsen.FinanceTracker.UI.Menu;
+﻿using Modsen.FinanceTracker.BLL.Services;
+using Modsen.FinanceTracker.DAL.Repositories;
+using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.UI.Menu;
+using Modsen.FinanceTracker.UI.Views;
 using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI;
@@ -6,12 +10,16 @@ namespace Modsen.FinanceTracker.UI;
 public class App
 {
     private readonly MainMenu _mainMenu;
-    private bool _isRunning;
+    private readonly FinanceService _financeService;
+    private readonly TransactionListView _listView;
+    private bool _isRunning = true;
 
     public App()
     {
+        var repo = new TransactionRepository();
+        _financeService = new FinanceService(repo);
         _mainMenu = new MainMenu();
-        _isRunning = true;
+        _listView = new TransactionListView();
     }
 
     public void Run()
@@ -28,25 +36,37 @@ public class App
         switch (choice)
         {
             case "Add Transaction":
-                AnsiConsole.MarkupLine("[blue]Adding logic will be here (Task 3)[/]");
+                var amount = AnsiConsole.Ask<decimal>("Enter amount:");
+                var desc = AnsiConsole.Ask<string>("Enter description:");
+                var type = AnsiConsole.Confirm("Is it Income?") ? "in" : "out";
+                
+                Transaction newT = type == "in" 
+                    ? new IncomeTransaction(Guid.NewGuid(), amount, desc, DateTime.Now, Guid.Empty)
+                    : new ExpenseTransaction(Guid.NewGuid(), amount, desc, DateTime.Now, Guid.Empty);
+                
+                _financeService.AddTransaction(newT);
                 break;
+
             case "View History":
-                AnsiConsole.MarkupLine("[blue]History view will be here (Task 3)[/]");
+                var transactions = _financeService.GetFilteredTransactions(null, null, null);
+                _listView.Render(transactions);
                 break;
+
             case "Delete Transaction":
-                AnsiConsole.MarkupLine("[blue]Delete logic will be here (Task 3)[/]");
+                var id = AnsiConsole.Ask<Guid>("Enter id:");
+                _financeService.DeleteTransaction(id);
                 break;
+            
             case "Check Balance":
-                AnsiConsole.MarkupLine("[green]Current Balance: Mock[/]");
+                var balance = _financeService.GetBalance();
+                AnsiConsole.MarkupLine($"[bold]Current Balance:[/] [green]{balance:C}[/]");
                 break;
+
             case "Exit":
                 _isRunning = false;
-                AnsiConsole.MarkupLine("[bold red]Exiting [/]");
                 return;
         }
-
-        AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
+        AnsiConsole.WriteLine("\nPress any key to return...");
         Console.ReadKey(true);
     }
 }
