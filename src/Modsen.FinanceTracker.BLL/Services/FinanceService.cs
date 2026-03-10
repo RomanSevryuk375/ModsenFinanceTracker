@@ -1,4 +1,5 @@
-﻿using Modsen.FinanceTracker.Domain.Entities;
+﻿using Modsen.FinanceTracker.BLL.DTOs;
+using Modsen.FinanceTracker.Domain.Entities;
 using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.BLL.Services;
@@ -12,34 +13,25 @@ public class FinanceService
         _repository = repository;
     }
 
-    public void AddTransaction(Transaction transaction) => _repository.Add(transaction);
-
-    public void DeleteTransaction(Guid id) => _repository.Delete(id);
-
-    public decimal GetBalance()
+    public async Task AddTransactionAsync(Transaction transaction)
     {
-        return _repository.GetAll().Sum(t => t is IncomeTransaction ? t.Amount : -t.Amount);
+        await _repository.AddAsync(transaction);
+    }
+
+    public async Task DeleteTransactionAsync(Guid id)
+    {
+        await _repository.DeleteAsync(id);
+    }
+
+    public async Task<decimal> GetBalanceAsync()
+    {
+        var transactions = await _repository.GetAllAsync();
+        
+        return transactions.Sum(t => t is IncomeTransaction ? t.Amount : -t.Amount);
     }
     
-    public IEnumerable<Transaction> GetFilteredTransactions(string? searchTerm, DateTime? from, DateTime? to)
+    public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(TransactionFilterDto filter)
     {
-        var query = _repository.GetAll();
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            query = query.Where(t => t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-        }
-
-        if (from.HasValue)
-        {
-            query = query.Where(t => t.Date >= from.Value);
-        }
-
-        if (to.HasValue)
-        {
-            query = query.Where(t => t.Date <= to.Value);
-        }
-
-        return query.OrderByDescending(t => t.Date);
+        return await _repository.GetAllAsync(filter.ToExpression());
     }
 }
