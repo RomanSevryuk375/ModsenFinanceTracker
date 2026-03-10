@@ -1,52 +1,41 @@
-﻿using Modsen.FinanceTracker.UI.Menu;
-using Spectre.Console;
+﻿using Modsen.FinanceTracker.UI.Interfaces;
 
 namespace Modsen.FinanceTracker.UI;
 
-public class App
+public class App : IApp
 {
-    private readonly MainMenu _mainMenu;
-    private bool _isRunning;
+    private readonly IMainMenu _mainMenu;
+    private readonly IEnumerable<IMenuAction> _actions;
+    private bool _isRunning = true;
 
-    public App()
+    public App(IMainMenu mainMenu, IEnumerable<IMenuAction> actions)
     {
-        _mainMenu = new MainMenu();
-        _isRunning = true;
+        _mainMenu = mainMenu;
+        _actions = actions;
     }
 
     public void Run()
     {
         while (_isRunning)
         {
-            var choice = _mainMenu.ShowAndGetChoice();
+            var availableChoices = _actions.Select(a => a.Name);
+            var choice = _mainMenu.ShowAndGetChoice(availableChoices);
+
             HandleChoice(choice);
         }
     }
 
     private void HandleChoice(string choice)
     {
-        switch (choice)
+        var action = _actions.FirstOrDefault(a => a.Name == choice);
+
+        if (action is not null)
         {
-            case Constants.MainMenu.ActionAdd:
-                AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]Adding logic will be here (Task 3)[/]");
-                break;
-            case Constants.MainMenu.ActionView:
-                AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]History view will be here (Task 3)[/]");
-                break;
-            case Constants.MainMenu.ActionDelete:
-                AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]Delete logic will be here (Task 3)[/]");
-                break;
-            case Constants.MainMenu.ActionBalance:
-                AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Current Balance: Mock[/]");
-                break;
-            case Constants.MainMenu.ActionExit:
-                _isRunning = false;
-                AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]Exiting [/]");
-                return;
+            action.Execute();
         }
 
-        AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine($"[{Constants.Colors.Wait}]Press any key to continue...[/]");
+        Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey(true);
+
     }
 }
