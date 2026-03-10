@@ -1,10 +1,11 @@
-﻿using Spectre.Console;
+﻿using Modsen.FinanceTracker.UI.Interfaces;
+using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Menu;
 
-public class MainMenu
+public class MainMenu : IMainMenu
 {
-    public string ShowAndGetChoice()
+    public string ShowAndGetChoice(IEnumerable<string> choices)
     {
         AnsiConsole.Clear();
         
@@ -18,6 +19,6 @@ public class MainMenu
             new SelectionPrompt<string>()
                 .Title(Constants.MainMenu.SelectOptionPrompt)
                 .PageSize(Constants.MainMenu.MainPageSize)
-                .AddChoices(Constants.MainMenu.AllActions));
+                .AddChoices(choices));
     }
 }
