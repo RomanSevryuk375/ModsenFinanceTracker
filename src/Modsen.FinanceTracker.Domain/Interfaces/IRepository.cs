@@ -1,8 +1,16 @@
-﻿namespace Modsen.FinanceTracker.Domain.Interfaces;
+﻿using System.Linq.Expressions;
+
+namespace Modsen.FinanceTracker.Domain.Interfaces;
 
 public interface IRepository<T> where T : class
 {
-    IEnumerable<T> GetAll();
-    void Add(T entity);
-    void Delete(Guid id);
+    Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? filter = null, 
+        int? skip = null, 
+        int? take = null);
+    
+    Task<T?> GetByIdAsync(Guid id);
+    Task AddAsync(T entity);
+    Task UpdateAsync(T entity);
+    Task DeleteAsync(Guid id);
 }

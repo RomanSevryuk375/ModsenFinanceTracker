@@ -4,18 +4,9 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
-public class TransactionRepository : IRepository<Transaction>
+public class TransactionRepository : BaseRepository<Transaction>, ITransactionRepository 
 {
-    public IEnumerable<Transaction> GetAll() => InMemoryStorage.Transactions;
-    
-    public void Add(Transaction entity) => InMemoryStorage.Transactions.Add(entity);
-
-    public void Delete(Guid id)
+    public TransactionRepository(IDataContext context) : base(context.Transactions)
     {
-        var transaction = InMemoryStorage.Transactions.FirstOrDefault(t => t.Id == id);
-        if (transaction != null)
-        {
-            InMemoryStorage.Transactions.Remove(transaction);
-        }
     }
 }
