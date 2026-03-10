@@ -27,26 +27,26 @@ public class App
     {
         switch (choice)
         {
-            case "Add Transaction":
-                AnsiConsole.MarkupLine("[blue]Adding logic will be here (Task 3)[/]");
+            case Constants.MainMenu.ActionAdd:
+                AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]Adding logic will be here (Task 3)[/]");
                 break;
-            case "View History":
-                AnsiConsole.MarkupLine("[blue]History view will be here (Task 3)[/]");
+            case Constants.MainMenu.ActionView:
+                AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]History view will be here (Task 3)[/]");
                 break;
-            case "Delete Transaction":
-                AnsiConsole.MarkupLine("[blue]Delete logic will be here (Task 3)[/]");
+            case Constants.MainMenu.ActionDelete:
+                AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]Delete logic will be here (Task 3)[/]");
                 break;
-            case "Check Balance":
-                AnsiConsole.MarkupLine("[green]Current Balance: Mock[/]");
+            case Constants.MainMenu.ActionBalance:
+                AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Current Balance: Mock[/]");
                 break;
-            case "Exit":
+            case Constants.MainMenu.ActionExit:
                 _isRunning = false;
-                AnsiConsole.MarkupLine("[bold red]Exiting [/]");
+                AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]Exiting [/]");
                 return;
         }
 
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
+        AnsiConsole.MarkupLine($"[{Constants.Colors.Wait}]Press any key to continue...[/]");
         Console.ReadKey(true);
     }
 }
