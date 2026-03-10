@@ -1,14 +1,15 @@
-﻿using Spectre.Console;
+﻿using Modsen.FinanceTracker.UI.Interfaces;
+using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Menu;
 
-public class MainMenu
+public class MainMenu : IMainMenu
 {
-    public string ShowAndGetChoice()
+    public string ShowAndGetChoice(IEnumerable<string> choices)
     {
         AnsiConsole.Clear();
         
-        var rule = new Rule("[yellow]Main Menu[/]");
+        var rule = new Rule(Constants.MainMenu.MenuHeader);
         rule.Justification = Justify.Left;
         AnsiConsole.Write(rule);
 
@@ -16,14 +17,8 @@ public class MainMenu
 
         return AnsiConsole.Prompt(
             new SelectionPrompt<string>()
-                .Title("Please select an [green]option[/]:")
-                .PageSize(10)
-                .AddChoices(new[] {
-                    "Add Transaction", 
-                    "View History", 
-                    "Delete Transaction", 
-                    "Check Balance", 
-                    "Exit"
-                }));
+                .Title(Constants.MainMenu.SelectOptionPrompt)
+                .PageSize(Constants.MainMenu.MainPageSize)
+                .AddChoices(choices));
     }
 }

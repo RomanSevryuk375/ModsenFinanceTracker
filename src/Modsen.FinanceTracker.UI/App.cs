@@ -1,72 +1,41 @@
-﻿using Modsen.FinanceTracker.BLL.Services;
-using Modsen.FinanceTracker.DAL.Repositories;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Menu;
-using Modsen.FinanceTracker.UI.Views;
-using Spectre.Console;
+﻿using Modsen.FinanceTracker.UI.Interfaces;
 
 namespace Modsen.FinanceTracker.UI;
 
-public class App
+public class App : IApp
 {
-    private readonly MainMenu _mainMenu;
-    private readonly FinanceService _financeService;
-    private readonly TransactionListView _listView;
+    private readonly IMainMenu _mainMenu;
+    private readonly IEnumerable<IMenuAction> _actions;
     private bool _isRunning = true;
 
-    public App()
+    public App(IMainMenu mainMenu, IEnumerable<IMenuAction> actions)
     {
-        var repo = new TransactionRepository();
-        _financeService = new FinanceService(repo);
-        _mainMenu = new MainMenu();
-        _listView = new TransactionListView();
+        _mainMenu = mainMenu;
+        _actions = actions;
     }
 
     public void Run()
     {
         while (_isRunning)
         {
-            var choice = _mainMenu.ShowAndGetChoice();
+            var availableChoices = _actions.Select(a => a.Name);
+            var choice = _mainMenu.ShowAndGetChoice(availableChoices);
+
             HandleChoice(choice);
         }
     }
 
     private void HandleChoice(string choice)
     {
-        switch (choice)
+        var action = _actions.FirstOrDefault(a => a.Name == choice);
+
+        if (action is not null)
         {
-            case "Add Transaction":
-                var amount = AnsiConsole.Ask<decimal>("Enter amount:");
-                var desc = AnsiConsole.Ask<string>("Enter description:");
-                var type = AnsiConsole.Confirm("Is it Income?") ? "in" : "out";
-                
-                Transaction newT = type == "in" 
-                    ? new IncomeTransaction(Guid.NewGuid(), amount, desc, DateTime.Now, Guid.Empty)
-                    : new ExpenseTransaction(Guid.NewGuid(), amount, desc, DateTime.Now, Guid.Empty);
-                
-                _financeService.AddTransaction(newT);
-                break;
-
-            case "View History":
-                var transactions = _financeService.GetFilteredTransactions(null, null, null);
-                _listView.Render(transactions);
-                break;
-
-            case "Delete Transaction":
-                var id = AnsiConsole.Ask<Guid>("Enter id:");
-                _financeService.DeleteTransaction(id);
-                break;
-            
-            case "Check Balance":
-                var balance = _financeService.GetBalance();
-                AnsiConsole.MarkupLine($"[bold]Current Balance:[/] [green]{balance:C}[/]");
-                break;
-
-            case "Exit":
-                _isRunning = false;
-                return;
+            action.Execute();
         }
-        AnsiConsole.WriteLine("\nPress any key to return...");
+
+        Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey(true);
+
     }
 }
