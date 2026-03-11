@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Modsen.FinanceTracker.BLL/Modsen.FinanceTracker.BLL.csproj" />
+    <Project Path="src/Modsen.FinanceTracker.DAL/Modsen.FinanceTracker.DAL.csproj" />
+    <Project Path="src/Modsen.FinanceTracker.Domain/Modsen.FinanceTracker.Domain.csproj" />
+    <Project Path="src/Modsen.FinanceTracker.Infrastructure/Modsen.FinanceTracker.Infrastructure.csproj" />
+    <Project Path="src/Modsen.FinanceTracker.UI/Modsen.FinanceTracker.UI.csproj" />
+  </Folder>
+</Solution>
