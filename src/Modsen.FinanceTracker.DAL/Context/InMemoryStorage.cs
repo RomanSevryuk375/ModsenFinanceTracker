@@ -1,10 +1,11 @@
 ﻿using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Context;
 
-public static class InMemoryStorage
+public class InMemoryStorage : IDataContext
 {
-    public static List<Transaction> Transactions { get; } = new();
+    public List<Transaction> Transactions { get; } = new();
 
-    public static List<Category> Categories { get; } = new();
+    public List<Category> Categories { get; } = new();
 }
