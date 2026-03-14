@@ -13,8 +13,8 @@ class Program
             new AddTransactionAction(),
             new CheckBalanceAction(),
             new DeleteTransectionAction(),
-            new ExitAction(),
             new ViewTransactionAction(),
+            new ExitAction(),
         };
 
         IMainMenu menu = new MainMenu();

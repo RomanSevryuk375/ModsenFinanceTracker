@@ -1,6 +1,8 @@
-﻿namespace Modsen.FinanceTracker.Domain.Entities;
+﻿using Modsen.FinanceTracker.Domain.Interfaces;
 
-public abstract class Transaction
+namespace Modsen.FinanceTracker.Domain.Entities;
+
+public abstract class Transaction : IEntity
 {
     public Guid Id { get; set; }
     public decimal Amount { get; set; }
