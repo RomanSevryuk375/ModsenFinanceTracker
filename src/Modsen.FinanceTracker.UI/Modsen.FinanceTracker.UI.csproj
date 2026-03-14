@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Modsen.FinanceTracker.BLL\Modsen.FinanceTracker.BLL.csproj" />
     <ProjectReference Include="..\Modsen.FinanceTracker.Domain\Modsen.FinanceTracker.Domain.csproj" />
+    <ProjectReference Include="..\Modsen.FinanceTracker.Infrastructure\Modsen.FinanceTracker.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

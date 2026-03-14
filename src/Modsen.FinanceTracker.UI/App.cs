@@ -14,7 +14,7 @@ public class App : IApp
         _actions = actions;
     }
 
-    public void Run()
+    public async Task RunAsync()
     {
         while (_isRunning)
         {

@@ -2,6 +2,6 @@
 {
     public interface IApp
     {
-        void Run();
+        Task RunAsync();
     }
 }
