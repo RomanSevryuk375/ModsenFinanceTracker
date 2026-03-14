@@ -3,13 +3,13 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
-public abstract class BaseRepository<T> : IRepository<T> where T : class
+public abstract class BaseRepository<T> : IRepository<T> where T : class, IEntity
 {
-    protected readonly List<T> _storage;
+    protected readonly List<T> _storageTable;
 
-    protected BaseRepository(List<T> storage)
+    protected BaseRepository(List<T> storageTable)
     {
-        _storage = storage;
+        _storageTable = storageTable;
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(
@@ -17,7 +17,7 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class
         int? skip = null,
         int? take = null)
     {
-        var query = _storage.AsQueryable();
+        var query = _storageTable.AsQueryable();
 
         if (filter != null)
         {
@@ -39,27 +39,27 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class
 
     public virtual async Task<T?> GetByIdAsync(Guid id)
     {
-        return await Task.FromResult(_storage.Cast<dynamic>().FirstOrDefault(x => x.Id == id));
+        return await Task.FromResult(_storageTable.FirstOrDefault(x => x.Id == id));
     }
 
     public virtual async Task AddAsync(T entity)
     {
-        await Task.Run(() => _storage.Add(entity));
+        await Task.Run(() => _storageTable.Add(entity));
     }
 
     public virtual async Task UpdateAsync(T entity)
     {
         await Task.Run(() =>
         {
-            var dynamicEntity = (dynamic)entity;
-            Guid id = dynamicEntity.Id;
+            var dynamicEntity = entity;
+            var id = dynamicEntity.Id;
             
-            var existing = _storage.Cast<dynamic>().FirstOrDefault(x => x.Id == id);
+            var existing = _storageTable.FirstOrDefault(x => x.Id == id);
 
             if (existing is not null)
             {
-                var index = _storage.IndexOf((T)existing);
-                _storage[index] = entity;
+                var index = _storageTable.IndexOf(existing);
+                _storageTable[index] = entity;
             }
         });
     }
@@ -68,11 +68,11 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class
     {
         await Task.Run(() =>
         {
-            var existing = _storage.Cast<dynamic>().FirstOrDefault(x => x.Id == id);
+            var existing = _storageTable.FirstOrDefault(x => x.Id == id);
 
             if (existing != null)
             {
-                _storage.Remove((T)existing);
+                _storageTable.Remove(existing);
             }
         });
     }

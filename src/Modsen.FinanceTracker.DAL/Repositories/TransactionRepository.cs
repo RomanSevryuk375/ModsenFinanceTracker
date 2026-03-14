@@ -1,5 +1,4 @@
-﻿using Modsen.FinanceTracker.DAL.Context;
-using Modsen.FinanceTracker.Domain.Entities;
+﻿using Modsen.FinanceTracker.Domain.Entities;
 using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;

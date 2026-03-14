@@ -1,8 +1,9 @@
 ﻿using Modsen.FinanceTracker.Domain.Enums;
+using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 
-public class Category
+public class Category : IEntity
 {
     public Guid Id { get; set; }
     public string Name { get; set; }

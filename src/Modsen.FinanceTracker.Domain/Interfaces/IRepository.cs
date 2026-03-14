@@ -2,7 +2,7 @@
 
 namespace Modsen.FinanceTracker.Domain.Interfaces;
 
-public interface IRepository<T> where T : class
+public interface IRepository<T> where T : class, IEntity
 {
     Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? filter = null, 
