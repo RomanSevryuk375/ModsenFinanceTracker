@@ -51,8 +51,8 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class, IEntit
     {
         await Task.Run(() =>
         {
-            var dynamicEntity = entity;
-            var id = dynamicEntity.Id;
+            var updateEntity = entity;
+            var id = updateEntity.Id;
             
             var existing = _storageTable.FirstOrDefault(x => x.Id == id);
 

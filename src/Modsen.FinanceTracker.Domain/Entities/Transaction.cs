@@ -1,7 +1,10 @@
-﻿using Modsen.FinanceTracker.Domain.Interfaces;
+﻿using System.Text.Json.Serialization;
+using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 
+[JsonDerivedType(typeof(IncomeTransaction), typeDiscriminator: "income")]
+[JsonDerivedType(typeof(ExpenseTransaction), typeDiscriminator: "expense")]
 public abstract class Transaction : IEntity
 {
     public Guid Id { get; set; }
