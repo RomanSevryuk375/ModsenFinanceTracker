@@ -1,24 +1,66 @@
-﻿using Modsen.FinanceTracker.UI.Actions;
+﻿using Modsen.FinanceTracker.BLL.Services;
+using Modsen.FinanceTracker.DAL.Context;
+using Modsen.FinanceTracker.DAL.Repositories;
+using Modsen.FinanceTracker.Infrastructure.Configuration;
+using Modsen.FinanceTracker.UI.Actions;
 using Modsen.FinanceTracker.UI.Interfaces;
 using Modsen.FinanceTracker.UI.Menu;
+using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        var actions = new List<IMenuAction>
+        using var cts = new CancellationTokenSource();
+        
+        Console.CancelKeyPress += (s, e) =>
         {
-            new AddTransactionAction(),
-            new CheckBalanceAction(),
-            new DeleteTransectionAction(),
-            new ViewTransactionAction(),
-            new ExitAction(),
+            e.Cancel = true; 
+            cts.Cancel();  
+            Console.WriteLine("\nCancellation requested...");
         };
 
-        IMainMenu menu = new MainMenu();
-        IApp app = new App(menu, actions);
-        app.Run();
+        try
+        {
+            var config = AppConfiguration.Instance;
+        
+            var context = new JsonDbContext(config.JsonDbPath);
+            await context.LoadAsync(cts.Token);
+        
+            var categoryRepo = new JsonCategoryRepository(context);
+            await categoryRepo.SeedAsync(cts.Token); 
+
+            var transactionRepo = new JsonTransactionRepository(context);
+        
+            var financeService = new FinanceService(transactionRepo);
+        
+            var actions = new List<IMenuAction>
+            {
+                new AddTransactionAction(),
+                new CheckBalanceAction(),
+                new DeleteTransectionAction(),
+                new ViewTransactionAction(),
+                new ExitAction(),
+            };
+
+            IMainMenu menu = new MainMenu();
+        
+            IApp app = new App(menu, actions);
+            await app.RunAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            AnsiConsole.MarkupLine("Application stopped");
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.WriteException(ex);
+        }
+        finally
+        {
+            AnsiConsole.MarkupLine("Exiting...");
+        }
     }
 }

@@ -11,12 +11,18 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class, IEntit
     {
         _storageTable = storageTable;
     }
-
-    public virtual async Task<IEnumerable<T>> GetAllAsync(
+    
+    public virtual Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? filter = null,
         int? skip = null,
-        int? take = null)
+        int? take = null,
+        CancellationToken ct = default)
     {
+        if (ct.IsCancellationRequested)
+        {
+            return Task.FromCanceled<IEnumerable<T>>(ct);
+        }
+
         var query = _storageTable.AsQueryable();
 
         if (filter != null)
@@ -34,46 +40,60 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class, IEntit
             query = query.Take(take.Value);
         }
 
-        return await Task.FromResult(query.ToList());
+        var result = query.ToList();
+
+        return Task.FromResult<IEnumerable<T>>(result);
     }
 
-    public virtual async Task<T?> GetByIdAsync(Guid id)
+    public virtual Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await Task.FromResult(_storageTable.FirstOrDefault(x => x.Id == id));
-    }
-
-    public virtual async Task AddAsync(T entity)
-    {
-        await Task.Run(() => _storageTable.Add(entity));
-    }
-
-    public virtual async Task UpdateAsync(T entity)
-    {
-        await Task.Run(() =>
+        if (ct.IsCancellationRequested)
         {
-            var dynamicEntity = entity;
-            var id = dynamicEntity.Id;
-            
-            var existing = _storageTable.FirstOrDefault(x => x.Id == id);
+            return Task.FromCanceled<T?>(ct);
+        }
 
-            if (existing is not null)
-            {
-                var index = _storageTable.IndexOf(existing);
-                _storageTable[index] = entity;
-            }
-        });
+        var result = _storageTable.FirstOrDefault(x => x.Id == id);
+        return Task.FromResult(result);
     }
 
-    public virtual async Task DeleteAsync(Guid id)
+    public virtual Task AddAsync(T entity, CancellationToken ct = default)
     {
-        await Task.Run(() =>
+        if (ct.IsCancellationRequested)
         {
-            var existing = _storageTable.FirstOrDefault(x => x.Id == id);
+            return Task.FromCanceled(ct);
+        }
 
-            if (existing != null)
-            {
-                _storageTable.Remove(existing);
-            }
-        });
+        _storageTable.Add(entity);
+        return Task.CompletedTask;
+    }
+
+    public virtual Task UpdateAsync(T entity, CancellationToken ct = default)
+    {
+        if (ct.IsCancellationRequested)
+        {
+            return Task.FromCanceled(ct);
+        }
+
+        var index = _storageTable.FindIndex(x => x.Id == entity.Id);
+        if (index is not -1)
+        {
+            _storageTable[index] = entity;
+        }
+        return Task.CompletedTask;
+    }
+
+    public virtual Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        if (ct.IsCancellationRequested)
+        {
+            return Task.FromCanceled(ct);
+        }
+
+        var existing = _storageTable.FirstOrDefault(x => x.Id == id);
+        if (existing is not null)
+        {
+            _storageTable.Remove(existing);
+        }
+        return Task.CompletedTask;
     }
 }

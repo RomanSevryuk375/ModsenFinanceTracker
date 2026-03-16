@@ -14,28 +14,32 @@ public class App : IApp
         _actions = actions;
     }
 
-    public void Run()
+    public async Task RunAsync(CancellationToken ct = default)
     {
-        while (_isRunning)
+        while (_isRunning && !ct.IsCancellationRequested)
         {
             var availableChoices = _actions.Select(a => a.Name);
             var choice = _mainMenu.ShowAndGetChoice(availableChoices);
+            
+            if (ct.IsCancellationRequested)
+            {
+                break;
+            }
 
-            HandleChoice(choice);
+            HandleChoice(choice, ct);
         }
     }
 
-    private void HandleChoice(string choice)
+    private void HandleChoice(string choice,  CancellationToken ct)
     {
         var action = _actions.FirstOrDefault(a => a.Name == choice);
 
         if (action is not null)
         {
-            action.Execute();
+            action.ExecuteAsync(ct);
         }
 
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey(true);
-
     }
 }
