@@ -13,21 +13,21 @@ public class JsonTransactionRepository : BaseRepository<Transaction>, ITransacti
         _context = context;
     }
     
-    public override async Task AddAsync(Transaction entity)
+    public override async Task AddAsync(Transaction entity, CancellationToken ct = default)
     {
-        await base.AddAsync(entity);
-        await _context.SaveChangesAsync(); 
+        await base.AddAsync(entity, ct);
+        await _context.SaveChangesAsync(ct); 
     }
 
-    public override async Task UpdateAsync(Transaction entity)
+    public override async Task UpdateAsync(Transaction entity, CancellationToken ct = default)
     {
-        await base.UpdateAsync(entity);
-        await _context.SaveChangesAsync();
+        await base.UpdateAsync(entity, ct);
+        await _context.SaveChangesAsync(ct);
     }
     
-    public override async Task DeleteAsync(Guid id)
+    public override async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        await base.DeleteAsync(id);
-        await _context.SaveChangesAsync();
+        await base.DeleteAsync(id, ct);
+        await _context.SaveChangesAsync(ct);
     }
 }

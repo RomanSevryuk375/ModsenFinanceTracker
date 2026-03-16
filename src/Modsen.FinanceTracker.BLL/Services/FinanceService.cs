@@ -13,14 +13,14 @@ public class FinanceService
         _repository = repository;
     }
 
-    public async Task AddTransactionAsync(Transaction transaction)
+    public async Task AddTransactionAsync(Transaction transaction, CancellationToken ct = default)
     {
-        await _repository.AddAsync(transaction);
+        await _repository.AddAsync(transaction, ct);
     }
 
-    public async Task DeleteTransactionAsync(Guid id)
+    public async Task DeleteTransactionAsync(Guid id, CancellationToken ct = default)
     {
-        await _repository.DeleteAsync(id);
+        await _repository.DeleteAsync(id, ct);
     }
 
     public async Task<decimal> GetBalanceAsync()

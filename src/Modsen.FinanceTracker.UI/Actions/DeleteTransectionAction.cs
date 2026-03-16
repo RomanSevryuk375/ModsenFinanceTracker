@@ -6,7 +6,7 @@ namespace Modsen.FinanceTracker.UI.Actions;
 public class DeleteTransectionAction : IMenuAction
 {
     public string Name => Constants.MainMenu.ActionDelete;
-    public void Execute()
+    public async Task ExecuteAsync(CancellationToken ct)
     {
         AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]Delete logic will be here (Task 3)[/]");
     }

@@ -14,13 +14,13 @@ public class JsonCategoryRepository : BaseRepository<Category>, ICategoryReposit
         _context = context;
     }
 
-    public async Task SeedAsync()
+    public async Task SeedAsync(CancellationToken ct = default)
     {
         if (!_context.Categories.Any())
         {
             await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income));
             await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense));
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
     }
 }

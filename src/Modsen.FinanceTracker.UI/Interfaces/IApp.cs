@@ -2,6 +2,6 @@
 {
     public interface IApp
     {
-        Task RunAsync();
+        Task RunAsync(CancellationToken ct = default);
     }
 }

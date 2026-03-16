@@ -19,11 +19,11 @@ public class JsonDbContext : IDataContext
         _options = new JsonSerializerOptions { WriteIndented = true };
     }
 
-    public async Task LoadAsync()
+    public async Task LoadAsync(CancellationToken ct = default)
     {
         if (!File.Exists(_filePath)) return;
 
-        var json = await File.ReadAllTextAsync(_filePath);
+        var json = await File.ReadAllTextAsync(_filePath, ct);
         var data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
 
         if (data != null)
@@ -33,7 +33,7 @@ public class JsonDbContext : IDataContext
         }
     }
     
-    public async Task SaveChangesAsync()
+    public async Task SaveChangesAsync(CancellationToken ct = default)
     {
         var data = new JsonDataModel
         {
@@ -41,6 +41,6 @@ public class JsonDbContext : IDataContext
             Categories = Categories
         };
         var json = JsonSerializer.Serialize(data, _options);
-        await File.WriteAllTextAsync(_filePath, json);
+        await File.WriteAllTextAsync(_filePath, json, ct);
     }
 }
