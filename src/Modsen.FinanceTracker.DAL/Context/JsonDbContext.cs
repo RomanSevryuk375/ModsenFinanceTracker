@@ -21,12 +21,15 @@ public class JsonDbContext : IDataContext
 
     public async Task LoadAsync(CancellationToken ct = default)
     {
-        if (!File.Exists(_filePath)) return;
+        if (!File.Exists(_filePath))
+        {
+            return;
+        }
 
         var json = await File.ReadAllTextAsync(_filePath, ct);
         var data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
 
-        if (data != null)
+        if (data is not null)
         {
             Transactions = data.Transactions;
             Categories = data.Categories;
