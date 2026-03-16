@@ -20,6 +20,11 @@ public class Constants
         };
     }
 
+    public static class Reports
+    {
+        public const string ActionExportReport = "Export Report";
+    }
+    
     public static class Colors
     {
         public const string Success = "green";
