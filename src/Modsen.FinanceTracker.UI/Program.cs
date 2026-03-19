@@ -1,4 +1,5 @@
-﻿using Modsen.FinanceTracker.BLL.Services;
+﻿using Modsen.FinanceTracker.BLL.Factories;
+using Modsen.FinanceTracker.BLL.Services;
 using Modsen.FinanceTracker.DAL.Context;
 using Modsen.FinanceTracker.DAL.Repositories;
 using Modsen.FinanceTracker.Infrastructure.Configuration;
@@ -35,7 +36,10 @@ class Program
             var transactionRepo = new JsonTransactionRepository(context);
         
             var financeService = new FinanceService(transactionRepo);
-        
+            var reportService = new ReportService(transactionRepo);
+
+            var transactionFactory = new TransactionFactory();
+            
             var actions = new List<IMenuAction>
             {
                 new AddTransactionAction(),
@@ -43,6 +47,7 @@ class Program
                 new DeleteTransectionAction(),
                 new ViewTransactionAction(),
                 new ExitAction(),
+                new ExportReportAction()
             };
 
             IMainMenu menu = new MainMenu();
