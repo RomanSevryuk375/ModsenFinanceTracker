@@ -8,14 +8,22 @@ namespace Modsen.FinanceTracker.BLL.Services;
 public class FinanceService : IFinanceService
 {
     private readonly IRepository<Transaction> _repository;
+    private readonly IValidator<Transaction> _validator;
 
-    public FinanceService(IRepository<Transaction> repository)
+    public FinanceService(IRepository<Transaction> repository, IValidator<Transaction> validator)
     {
         _repository = repository;
+        _validator = validator;
     }
 
     public async Task AddTransactionAsync(Transaction transaction, CancellationToken ct = default)
     {
+        var (isValid, message) = _validator.Validate(transaction);
+        if (!isValid)
+        {
+            throw new ArgumentException(message);
+        }
+        
         await _repository.AddAsync(transaction, ct);
     }
 

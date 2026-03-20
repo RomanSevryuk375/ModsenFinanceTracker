@@ -1,5 +1,6 @@
 ﻿using Modsen.FinanceTracker.BLL.Factories;
 using Modsen.FinanceTracker.BLL.Services;
+using Modsen.FinanceTracker.BLL.Validators;
 using Modsen.FinanceTracker.DAL.Context;
 using Modsen.FinanceTracker.DAL.Repositories;
 using Modsen.FinanceTracker.Infrastructure.Configuration;
@@ -33,10 +34,11 @@ class Program
         
             var categoryRepo = new JsonCategoryRepository(context);
             await categoryRepo.SeedAsync(cts.Token); 
-
             var transactionRepo = new JsonTransactionRepository(context);
+
+            var transactionValidator = new TransactionValidator();
         
-            var financeService = new FinanceService(transactionRepo);
+            var financeService = new FinanceService(transactionRepo, transactionValidator);
             var categoryService = new CategoryService(categoryRepo);
             var reportService = new ReportService(transactionRepo);
 
