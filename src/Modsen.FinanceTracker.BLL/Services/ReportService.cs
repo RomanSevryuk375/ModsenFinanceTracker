@@ -4,7 +4,7 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
-public class ReportService
+public class ReportService : IReportService
 {
     private readonly IRepository<Transaction> _repository;
 
