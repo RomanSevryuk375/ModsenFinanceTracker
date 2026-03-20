@@ -6,6 +6,7 @@ using Modsen.FinanceTracker.Infrastructure.Configuration;
 using Modsen.FinanceTracker.UI.Actions;
 using Modsen.FinanceTracker.UI.Interfaces;
 using Modsen.FinanceTracker.UI.Menu;
+using Modsen.FinanceTracker.UI.Views;
 using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI;
@@ -36,23 +37,27 @@ class Program
             var transactionRepo = new JsonTransactionRepository(context);
         
             var financeService = new FinanceService(transactionRepo);
+            var categoryService = new CategoryService(categoryRepo);
             var reportService = new ReportService(transactionRepo);
 
             var transactionFactory = new TransactionFactory();
+
+            var transactionListView = new TransactionListView();
             
             var actions = new List<IMenuAction>
             {
-                new AddTransactionAction(),
-                new CheckBalanceAction(),
-                new DeleteTransectionAction(),
-                new ViewTransactionAction(),
-                new ExitAction(),
-                new ExportReportAction()
+                new AddTransactionAction(financeService, transactionFactory, categoryService),
+                new UpdateTransactionAction(financeService),
+                new CheckBalanceAction(financeService),
+                new DeleteTransactionAction(financeService),
+                new ViewTransactionAction(financeService, categoryService, transactionListView),
+                new ExportReportAction(reportService),
+                new ExitAction()
             };
 
-            IMainMenu menu = new MainMenu();
+            var menu = new MainMenu();
         
-            IApp app = new App(menu, actions);
+            var app = new App(menu, actions);
             await app.RunAsync(cts.Token);
         }
         catch (OperationCanceledException)
