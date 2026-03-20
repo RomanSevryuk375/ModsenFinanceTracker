@@ -18,8 +18,8 @@ public class JsonCategoryRepository : BaseRepository<Category>, ICategoryReposit
     {
         if (!_context.Categories.Any())
         {
-            await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income));
-            await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense));
+            await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income), ct);
+            await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense), ct);
             await _context.SaveChangesAsync(ct);
         }
     }
