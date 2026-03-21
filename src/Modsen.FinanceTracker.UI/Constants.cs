@@ -34,4 +34,16 @@ public class Constants
         public const string Error = "red";
         public const string Info = "blue";
     }
+    
+    public static class Balance
+    {
+        public const string Header = "Summary";
+        public const string MessageTemplate = "Your current balance is: [{0}]{1:N2} {2}[/]";
+    }
+
+    public static class Layout
+    {
+        public const int PanelPaddingHorizontal = 2;
+        public const int PanelPaddingVertical = 1;
+    }
 }
