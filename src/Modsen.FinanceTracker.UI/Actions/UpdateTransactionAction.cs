@@ -18,40 +18,70 @@ public class UpdateTransactionAction : IMenuAction
     public string Name => $"{Constants.MainMenu.ActionUpdate}"; 
 
     public async Task ExecuteAsync(CancellationToken ct)
+{
+    var transactions = await FetchTransactionsAsync(ct);
+    if (!transactions.Any())
     {
-        var transactions = 
-            (await _financeService.GetFilteredTransactionsAsync(new TransactionFilterDto(), ct)).ToList();
-
-        if (!transactions.Any())
-        {
-            AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found to update.[/]");
-            return;
-        }
-        
-        var target = AnsiConsole.Prompt(
-            new SelectionPrompt<Transaction>()
-                .Title("Choose transaction to edit:")
-                .UseConverter(t => $"{t.Date:d} | {t.Description} ({t.Amount:N2})")
-                .AddChoices(transactions));
-        
-        var newAmount = AnsiConsole.Prompt(
-            new TextPrompt<decimal>($"New amount (current: {target.Amount}):")
-                .DefaultValue(target.Amount));
-        
-        var newDesc = AnsiConsole.Prompt(
-            new TextPrompt<string>($"New description (current: {target.Description}):")
-                .DefaultValue(target.Description));
-        
-        if (ct.IsCancellationRequested)
-        {
-            return;
-        }
-
-        target.Amount = newAmount;
-        target.Description = newDesc;
-        
-        await _financeService.UpdateTransactionAsync(target, ct);
-
-        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Transaction updated[/]");
+        AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found to update.[/]");
+        return;
     }
+    
+    var target = PromptForSelection(transactions);
+    var newAmount = PromptNewAmount(target.Amount);
+    var newDescription = PromptNewDescription(target.Description);
+    
+    if (ct.IsCancellationRequested)
+    {
+        return;
+    }
+
+    await FinalizeUpdateAsync(target, newAmount, newDescription, ct);
+}
+    
+
+private async Task<List<Transaction>> FetchTransactionsAsync(CancellationToken ct)
+{
+    var filter = new TransactionFilterDto();
+    var result = await _financeService.GetFilteredTransactionsAsync(filter, ct);
+    return result.ToList();
+}
+
+private Transaction PromptForSelection(List<Transaction> transactions)
+{
+    return AnsiConsole.Prompt(
+        new SelectionPrompt<Transaction>()
+            .Title("Choose transaction to edit:")
+            .UseConverter(t => $"{t.Date:d} | {t.Description} ({t.Amount:N2})")
+            .AddChoices(transactions));
+}
+
+private decimal PromptNewAmount(decimal currentAmount)
+{
+    return AnsiConsole.Prompt(
+        new TextPrompt<decimal>(string.Format($"New amount (current: {currentAmount}"))
+            .DefaultValue(currentAmount)
+            .Validate(a => a > 0 
+                ? ValidationResult.Success() 
+                : ValidationResult.Error($"[{Constants.Colors.Error}]Amount must be positive[/]")));
+}
+
+private string PromptNewDescription(string currentDescription)
+{
+    return AnsiConsole.Prompt(
+        new TextPrompt<string>(string.Format($"New description (current: {currentDescription}):"))
+            .DefaultValue(currentDescription));
+}
+
+private async Task FinalizeUpdateAsync(
+    Transaction target,
+    decimal amount,
+    string description, 
+    CancellationToken ct)
+{
+    target.Amount = amount;
+    target.Description = description;
+
+    await _financeService.UpdateTransactionAsync(target, ct);
+    AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Transaction updated successfully[/]");
+}
 }

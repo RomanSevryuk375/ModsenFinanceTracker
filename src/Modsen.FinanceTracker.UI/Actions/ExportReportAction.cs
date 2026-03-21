@@ -19,25 +19,46 @@ public class ExportReportAction : IMenuAction
 
     public async Task ExecuteAsync(CancellationToken ct)
     {
-        var format = AnsiConsole.Prompt(
+        var format = PromptFormat();
+        
+        if (ct.IsCancellationRequested)
+        {
+            return;
+        }
+
+        var (strategy, extension) = GetStrategyAndExtension(format);
+        
+        var fullPath = GenerateReportPath(format, extension);
+        
+        await _reportService.ExportAsync(strategy, fullPath, ct);
+
+        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Report exported to {fullPath}[/]");
+    }
+
+    private string PromptFormat()
+    {
+        return AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title("Select export format:")
                 .AddChoices("CSV", "TXT"));
-        
-        var (strategy, extension) = format switch
+    }
+
+    private (IExportStrategy strategy, string extension) GetStrategyAndExtension(string format)
+    {
+        return format switch
         {
-            "CSV" => ((IExportStrategy)new CsvExportStrategy(), ".csv"),
+            "CSV" => (new CsvExportStrategy(), ".csv"),
             "TXT" => (new TxtExportStrategy(), ".txt"),
+            
             _ => throw new ArgumentException("Invalid format")
         };
+    }
 
+    private string GenerateReportPath(string format, string extension)
+    {
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
-        var generatedFileName = $"FinanceReport_{timestamp}_{format}{extension}";
-        
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, generatedFileName);
-        
-        await _reportService.ExportAsync(strategy, path, ct);
-
-        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Report exported to {path}[/]");
+        var fileName = $"FinanceReport_{timestamp}_{format}{extension}";
+    
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
     }
 }

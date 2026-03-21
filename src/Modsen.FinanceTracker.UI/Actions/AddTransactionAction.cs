@@ -26,48 +26,75 @@ public class AddTransactionAction : IMenuAction
 
     public async Task ExecuteAsync(CancellationToken ct)
     {
-        var amount = AnsiConsole.Prompt(
-            new TextPrompt<decimal>("Enter amount:")
-                .Validate(a => a > 0 
-                    ? ValidationResult.Success() 
-                    : ValidationResult.Error($"[{Constants.Colors.Error}]Amount must be positive[/]")));
-        if (ct.IsCancellationRequested)
+        try
         {
-            return;
-        }
+            var amount = PromptAmount();
+            var type = PromptTransactionType();
+            var category = await GetSelectedCategoryAsync(type, ct);
+            if (category is null)
+            {
+                return;
+            }
 
+            var description = PromptDescription();
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await SaveTransactionAsync(type, amount, description, category.Id, ct);
+        }
+        catch (ArgumentException ex) 
+        {
+            AnsiConsole.MarkupLine($"[red]Validation Error: {ex.Message}[/]");
+        }
+    }
+    
+
+    private decimal PromptAmount()
+    {
+        return AnsiConsole.Prompt(new TextPrompt<decimal>("Enter amount:"));
+    }
+
+    private TransactionType PromptTransactionType()
+    {
         var isIncome = AnsiConsole.Confirm($"Is this an [{Constants.Colors.Info}]Income[/]?");
-        
-        var type = isIncome 
+        return isIncome 
             ? TransactionType.Income 
             : TransactionType.Expense;
+    }
 
-        var categories = (await _categoryService.GetAllCategoriesAsync(ct: ct)).ToList();
+    private async Task<Category?> GetSelectedCategoryAsync(TransactionType type, CancellationToken ct)
+    {
+        var categories = (await _categoryService.GetCategoriesByTypeAsync(type, ct)).ToList();
+        
         if (!categories.Any())
         {
             AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]No categories found. Seed data first.[/]");
-            return;
+            return null;
         }
-        
-        var category = AnsiConsole.Prompt(
+
+        return AnsiConsole.Prompt(
             new SelectionPrompt<Category>()
                 .Title("Select category:")
                 .UseConverter(c => c.Name)
                 .AddChoices(categories));
-        if (ct.IsCancellationRequested)
-        {
-            return;
-        }
+    }
 
-        var description = AnsiConsole.Ask<string>("Enter description:");
-        if (ct.IsCancellationRequested)
-        {
-            return;
-        }
+    private string PromptDescription()
+    {
+        return AnsiConsole.Ask<string>("Enter description:");
+    }
 
-        var transaction = _factory.CreateTransaction(type, amount, description, category.Id);
+    private async Task SaveTransactionAsync(
+        TransactionType type,
+        decimal amount, 
+        string desc,
+        Guid categoryId,
+        CancellationToken ct)
+    {
+        var transaction = _factory.CreateTransaction(type, amount, desc, categoryId);
         await _financeService.AddTransactionAsync(transaction, ct);
-
         AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Transaction added successfully[/]");
     }
 }

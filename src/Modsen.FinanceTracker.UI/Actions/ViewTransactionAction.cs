@@ -27,59 +27,69 @@ public class ViewTransactionAction : IMenuAction
 
     public async Task ExecuteAsync(CancellationToken ct)
     {
-        var searchTerm = string.Empty;
-
-        if (AnsiConsole.Confirm("Do you want to search by description?"))
-        {
-            searchTerm = AnsiConsole.Ask<string>("Enter search term:");
-        }
-        
-        DateTime? from = AnsiConsole.Prompt(
-            new TextPrompt<DateTime>("Start date:")
-                .DefaultValue(DateTime.Now.AddMonths(-1))
-                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]"));
-    
-        DateTime? to = AnsiConsole.Prompt(
-            new TextPrompt<DateTime>("End date:")
-                .DefaultValue(DateTime.Now)
-                .Validate(date => date >= from 
-                    ? ValidationResult.Success() 
-                    : ValidationResult.Error("End date must be after start date")));
-        
+        var searchTerm = PromptSearchTerm();
+        var (from, to) = PromptDateRange();
         if (ct.IsCancellationRequested)
         {
             return;
         }
-
-        var filter = new TransactionFilterDto 
-        { 
+        
+        var filter = new TransactionFilterDto
+        {
             SearchTerm = searchTerm, 
-            From =  from,
+            From = from, 
             To = to
         };
-        
-        var transactions = 
-            (await _financeService.GetFilteredTransactionsAsync(filter, ct)).ToList();
-        
+        var transactions = (await _financeService.GetFilteredTransactionsAsync(filter, ct)).ToList();
+
         if (!transactions.Any())
         {
             AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found.[/]");
             return;
         }
 
-        var categories = 
-            (await _categoryService.GetAllCategoriesAsync(ct)).ToList();
+        var categories = (await _categoryService.GetAllCategoriesAsync(ct)).ToList();
         
-        var rows = transactions.Select(t => new TransactionRowModel(
-            t.Id.ToString()[..8], 
+        var rows = PrepareRowModels(transactions, categories);
+        _listView.Render(rows);
+    }
+    
+    private string PromptSearchTerm()
+    {
+        return AnsiConsole.Confirm("Do you want to search by description?")
+            ? AnsiConsole.Ask<string>("Enter search term:")
+            : string.Empty;
+    }
+
+    private (DateTime? from, DateTime? to) PromptDateRange()
+    {
+        DateTime? from = AnsiConsole.Prompt(
+            new TextPrompt<DateTime>("Start date:")
+                .DefaultValue(DateTime.Now.AddMonths(-1))
+                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]"));
+
+        DateTime? to = AnsiConsole.Prompt(
+            new TextPrompt<DateTime>("End date:")
+                .DefaultValue(DateTime.Now)
+                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]")
+                .Validate(date => date >= from 
+                    ? ValidationResult.Success() 
+                    : ValidationResult.Error("End date must be after start date")));
+
+        return (from, to);
+    }
+
+    private IEnumerable<TransactionRowModel> PrepareRowModels(List<Transaction> transactions, List<Category> categories)
+    {
+        return transactions.Select(t => new TransactionRowModel(
+            t.Id.ToString()[..8],
             t.Date.ToShortDateString(),
             categories.FirstOrDefault(c => c.Id == t.CategoryId)?.Name ?? "N/A",
             t.Description,
             FormatAmount(t)
         ));
-        
-        _listView.Render(rows);
     }
+
 
     private static string FormatAmount(Transaction t)
     {

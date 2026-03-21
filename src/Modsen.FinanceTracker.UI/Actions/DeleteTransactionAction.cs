@@ -19,23 +19,46 @@ public class DeleteTransactionAction : IMenuAction
 
     public async Task ExecuteAsync(CancellationToken ct)
     {
-        var transactions = 
-            (await _financeService.GetFilteredTransactionsAsync(new TransactionFilterDto(), ct)).ToList();
-
+        var transactions = await FetchTransactionsAsync(ct);
         if (!transactions.Any())
         {
-            AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found to update.[/]");
+            AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found to delete[/]");
             return;
         }
         
-        var target = AnsiConsole.Prompt(
+        var target = PromptForSelection(transactions);
+        if (ct.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (!AnsiConsole.Confirm("Are you sure you want to delete this transaction?"))
+        {
+            return;
+        }
+        
+        await FinalizeDeletionAsync(target.Id, ct);
+    }
+
+    private async Task<List<Transaction>> FetchTransactionsAsync(CancellationToken ct)
+    {
+        var filter = new TransactionFilterDto();
+        var result = await _financeService.GetFilteredTransactionsAsync(filter, ct);
+        return result.ToList();
+    }
+
+    private Transaction PromptForSelection(List<Transaction> transactions)
+    {
+        return AnsiConsole.Prompt(
             new SelectionPrompt<Transaction>()
                 .Title("Choose transaction to delete:")
                 .UseConverter(t => $"{t.Date:d} | {t.Description} ({t.Amount:N2})")
                 .AddChoices(transactions));
+    }
 
-        await _financeService.DeleteTransactionAsync(target.Id, ct);
-
-        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}] Transaction deleted successfully[/]");
+    private async Task FinalizeDeletionAsync(Guid id, CancellationToken ct)
+    {
+        await _financeService.DeleteTransactionAsync(id, ct);
+        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Transaction deleted successfully[/]");
     }
 }

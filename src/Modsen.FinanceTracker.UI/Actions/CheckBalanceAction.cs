@@ -19,23 +19,33 @@ public class CheckBalanceAction : IMenuAction
     public async Task ExecuteAsync(CancellationToken ct)
     {
         var balance = await _financeService.GetBalanceAsync(ct);
-        
         var currency = AppConfiguration.Instance.Currency;
-        
+    
         var color = balance >= 0 
             ? Constants.Colors.Success 
             : Constants.Colors.Error;
+        
+        var panel = CreateBalancePanel(balance, currency, color);
+    
+        AnsiConsole.Write(panel);
+    }
 
-        var panel = new Panel(
+    private Panel CreateBalancePanel(decimal balance, string currency, string color)
+    {
+        var message = string.Format(Constants.Balance.MessageTemplate, color, balance, currency);
+
+        return new Panel(
             Align.Center(
-                new Markup($"Your current balance is: [{color}]{balance:N2} {currency}[/]"),
+                new Markup(message),
                 VerticalAlignment.Middle))
         {
             Border = BoxBorder.Rounded,
-            Padding = new Padding(2, 1, 2, 1),
-            Header = new PanelHeader("Summary")
+            Padding = new Padding(
+                Constants.Layout.PanelPaddingHorizontal,
+                Constants.Layout.PanelPaddingVertical,
+                Constants.Layout.PanelPaddingHorizontal,
+                Constants.Layout.PanelPaddingVertical),
+            Header = new PanelHeader(Constants.Balance.Header)
         };
-
-        AnsiConsole.Write(panel);
     }
 }
