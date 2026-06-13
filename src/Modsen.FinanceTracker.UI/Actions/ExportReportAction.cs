@@ -5,37 +5,29 @@ using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public class ExportReportAction : IMenuAction
+public sealed class ExportReportAction(IReportService reportService) : IMenuAction
 {
+    public string Name => $"{Constants.MainMenu.ActionExportReport}";
 
-    private readonly IReportService _reportService;
-
-    public ExportReportAction(IReportService reportService)
-    {
-        _reportService = reportService;
-    }
-
-    public string Name => $"{Constants.MainMenu.ActionExportReport}"; 
-
-    public async Task ExecuteAsync(CancellationToken ct)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var format = PromptFormat();
-        
-        if (ct.IsCancellationRequested)
+
+        if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
         var (strategy, extension) = GetStrategyAndExtension(format);
-        
+
         var fullPath = GenerateReportPath(format, extension);
-        
-        await _reportService.ExportAsync(strategy, fullPath, ct);
+
+        await reportService.ExportAsync(strategy, fullPath, cancellationToken);
 
         AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Report exported to {fullPath}[/]");
     }
 
-    private string PromptFormat()
+    private static string PromptFormat()
     {
         return AnsiConsole.Prompt(
             new SelectionPrompt<string>()
@@ -43,22 +35,22 @@ public class ExportReportAction : IMenuAction
                 .AddChoices("CSV", "TXT"));
     }
 
-    private (IExportStrategy strategy, string extension) GetStrategyAndExtension(string format)
+    private static (IExportStrategy strategy, string extension) GetStrategyAndExtension(string format)
     {
         return format switch
         {
             "CSV" => (new CsvExportStrategy(), ".csv"),
             "TXT" => (new TxtExportStrategy(), ".txt"),
-            
+
             _ => throw new ArgumentException("Invalid format")
         };
     }
 
-    private string GenerateReportPath(string format, string extension)
+    private static string GenerateReportPath(string format, string extension)
     {
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
         var fileName = $"FinanceReport_{timestamp}_{format}{extension}";
-    
+
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
     }
 }

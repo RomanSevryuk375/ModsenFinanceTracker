@@ -5,39 +5,29 @@ using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public class CheckBalanceAction : IMenuAction
+public sealed class CheckBalanceAction(IFinanceService financeService) : IMenuAction
 {
-    private readonly IFinanceService _financeService;
-
-    public CheckBalanceAction(IFinanceService financeService)
-    {
-        _financeService = financeService;
-    }
-
     public string Name => Constants.MainMenu.ActionBalance;
 
-    public async Task ExecuteAsync(CancellationToken ct)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var balance = await _financeService.GetBalanceAsync(ct);
+        var balance = await financeService.GetBalanceAsync(cancellationToken);
         var currency = AppConfiguration.Instance.Currency;
-    
-        var color = balance >= 0 
-            ? Constants.Colors.Success 
+
+        var color = balance >= 0
+            ? Constants.Colors.Success
             : Constants.Colors.Error;
-        
+
         var panel = CreateBalancePanel(balance, currency, color);
-    
+
         AnsiConsole.Write(panel);
     }
 
-    private Panel CreateBalancePanel(decimal balance, string currency, string color)
+    private static Panel CreateBalancePanel(decimal balance, string currency, string color)
     {
         var message = string.Format(Constants.Balance.MessageTemplate, color, balance, currency);
 
-        return new Panel(
-            Align.Center(
-                new Markup(message),
-                VerticalAlignment.Middle))
+        return new Panel(Align.Center(new Markup(message), VerticalAlignment.Middle))
         {
             Border = BoxBorder.Rounded,
             Padding = new Padding(

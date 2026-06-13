@@ -3,9 +3,7 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
-public class TransactionRepository : BaseRepository<Transaction>, ITransactionRepository 
+public sealed class TransactionRepository(IDataContext context) 
+    : BaseRepository<Transaction>(context.Transactions), ITransactionRepository 
 {
-    public TransactionRepository(IDataContext context) : base(context.Transactions)
-    {
-    }
 }

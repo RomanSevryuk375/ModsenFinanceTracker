@@ -21,12 +21,7 @@ public class TransactionListView : ITransactionListView
 
         foreach (var row in rows)
         {
-            table.AddRow(
-                row.Id,
-                row.Date,
-                row.Description,
-                row.CategoryName,
-                row.FormattedAmount);
+            table.AddRow(row.Id, row.Date, row.Description, row.CategoryName, row.FormattedAmount);
         }
 
         AnsiConsole.Write(table);

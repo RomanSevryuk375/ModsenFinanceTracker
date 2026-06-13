@@ -1,13 +1,13 @@
 ﻿namespace Modsen.FinanceTracker.UI;
 
-public class Constants
+public static class Constants
 {
     public static class MainMenu
     {
         public const string MenuHeader = "[yellow]Modsen Finance Tracker[/]";
         public const string SelectOptionPrompt = "Please select an [green]option[/]:";
         public const int MainPageSize = 10;
-        
+
         public const string ActionAdd = "Add Transaction";
         public const string ActionUpdate = "Update Transaction";
         public const string ActionView = "View History";
@@ -26,7 +26,7 @@ public class Constants
         public const string TransactionDescription = "Description";
         public const string TransactionCategory = "Category";
     }
-    
+
     public static class Colors
     {
         public const string Primary = "yellow";
@@ -34,7 +34,7 @@ public class Constants
         public const string Error = "red";
         public const string Info = "blue";
     }
-    
+
     public static class Balance
     {
         public const string Header = "Summary";

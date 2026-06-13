@@ -7,61 +7,52 @@ using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public class ViewTransactionAction : IMenuAction
+public sealed class ViewTransactionAction(
+    IFinanceService financeService,
+    ICategoryService categoryService,
+    ITransactionListView listView) : IMenuAction
 {
-    private readonly IFinanceService _financeService;
-    private readonly ICategoryService _categoryService;
-    private readonly ITransactionListView _listView;
-
-    public ViewTransactionAction(
-        IFinanceService financeService, 
-        ICategoryService categoryService, 
-        ITransactionListView listView)
-    {
-        _financeService = financeService;
-        _categoryService = categoryService;
-        _listView = listView;
-    }
-
     public string Name => Constants.MainMenu.ActionView;
 
-    public async Task ExecuteAsync(CancellationToken ct)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var searchTerm = PromptSearchTerm();
         var (from, to) = PromptDateRange();
-        if (ct.IsCancellationRequested)
+
+        var filter = new TransactionFilterDto
+        {
+            SearchTerm = searchTerm,
+            From = from,
+            To = to
+        };
+
+        if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
-        
-        var filter = new TransactionFilterDto
-        {
-            SearchTerm = searchTerm, 
-            From = from, 
-            To = to
-        };
-        var transactions = (await _financeService.GetFilteredTransactionsAsync(filter, ct)).ToList();
 
-        if (!transactions.Any())
+        var transactions = (await financeService.GetFilteredTransactionsAsync(
+            filter, cancellationToken)).ToList();
+        if (transactions.Count == 0)
         {
             AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found.[/]");
             return;
         }
 
-        var categories = (await _categoryService.GetAllCategoriesAsync(ct)).ToList();
-        
+        var categories = (await categoryService.GetAllCategoriesAsync(cancellationToken)).ToList();
+
         var rows = PrepareRowModels(transactions, categories);
-        _listView.Render(rows);
+        listView.Render(rows);
     }
-    
-    private string PromptSearchTerm()
+
+    private static string PromptSearchTerm()
     {
         return AnsiConsole.Confirm("Do you want to search by description?")
             ? AnsiConsole.Ask<string>("Enter search term:")
             : string.Empty;
     }
 
-    private (DateTime? from, DateTime? to) PromptDateRange()
+    private static (DateTime? from, DateTime? to) PromptDateRange()
     {
         DateTime? from = AnsiConsole.Prompt(
             new TextPrompt<DateTime>("Start date:")
@@ -72,14 +63,17 @@ public class ViewTransactionAction : IMenuAction
             new TextPrompt<DateTime>("End date:")
                 .DefaultValue(DateTime.Now)
                 .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]")
-                .Validate(date => date >= from 
-                    ? ValidationResult.Success() 
-                    : ValidationResult.Error("End date must be after start date")));
+                .Validate(date =>
+                    date >= from
+                        ? ValidationResult.Success()
+                        : ValidationResult.Error("End date must be after start date")));
 
         return (from, to);
     }
 
-    private IEnumerable<TransactionRowModel> PrepareRowModels(List<Transaction> transactions, List<Category> categories)
+    private static IEnumerable<TransactionRowModel> PrepareRowModels(
+        List<Transaction> transactions, 
+        List<Category> categories)
     {
         return transactions.Select(t => new TransactionRowModel(
             t.Id.ToString()[..8],
@@ -93,14 +87,14 @@ public class ViewTransactionAction : IMenuAction
 
     private static string FormatAmount(Transaction t)
     {
-        var color = t is IncomeTransaction 
-            ? $"{Constants.Colors.Success}" 
+        var color = t is IncomeTransaction
+            ? $"{Constants.Colors.Success}"
             : $"{Constants.Colors.Error}";
-        
-        var sign = t is IncomeTransaction 
-            ? "+" 
+
+        var sign = t is IncomeTransaction
+            ? "+"
             : "-";
-        
+
         return $"[{color}]{sign}{t.Amount:N2}[/]";
     }
 }

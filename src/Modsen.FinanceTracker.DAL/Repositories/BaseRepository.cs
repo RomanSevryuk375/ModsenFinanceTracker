@@ -3,29 +3,23 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
-public abstract class BaseRepository<T> : IRepository<T> where T : class, IEntity
+public abstract class BaseRepository<T>(
+    List<T> storageTable) : IRepository<T> where T : class, IEntity
 {
-    protected readonly List<T> _storageTable;
-
-    protected BaseRepository(List<T> storageTable)
-    {
-        _storageTable = storageTable;
-    }
-    
     public virtual Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? filter = null,
         int? skip = null,
         int? take = null,
-        CancellationToken ct = default)
+        CancellationToken cancellationToken = default)
     {
-        if (ct.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return Task.FromCanceled<IEnumerable<T>>(ct);
+            return Task.FromCanceled<IEnumerable<T>>(cancellationToken);
         }
 
-        var query = _storageTable.AsQueryable();
+        var query = storageTable.AsQueryable();
 
-        if (filter != null)
+        if (filter is not null)
         {
             query = query.Where(filter);
         }
@@ -45,54 +39,54 @@ public abstract class BaseRepository<T> : IRepository<T> where T : class, IEntit
         return Task.FromResult<IEnumerable<T>>(result);
     }
 
-    public virtual Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public virtual Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        if (ct.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return Task.FromCanceled<T?>(ct);
+            return Task.FromCanceled<T?>(cancellationToken);
         }
 
-        var result = _storageTable.FirstOrDefault(x => x.Id == id);
+        var result = storageTable.FirstOrDefault(x => x.Id == id);
         return Task.FromResult(result);
     }
 
-    public virtual Task AddAsync(T entity, CancellationToken ct = default)
+    public virtual Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        if (ct.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return Task.FromCanceled(ct);
+            return Task.FromCanceled(cancellationToken);
         }
 
-        _storageTable.Add(entity);
+        storageTable.Add(entity);
         return Task.CompletedTask;
     }
 
-    public virtual Task UpdateAsync(T entity, CancellationToken ct = default)
+    public virtual Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
-        if (ct.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return Task.FromCanceled(ct);
+            return Task.FromCanceled(cancellationToken);
         }
 
-        var index = _storageTable.FindIndex(x => x.Id == entity.Id);
+        var index = storageTable.FindIndex(x => x.Id == entity.Id);
         if (index is not -1)
         {
-            _storageTable[index] = entity;
+            storageTable[index] = entity;
         }
         return Task.CompletedTask;
     }
 
-    public virtual Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public virtual Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        if (ct.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return Task.FromCanceled(ct);
+            return Task.FromCanceled(cancellationToken);
         }
 
-        var existing = _storageTable.FirstOrDefault(x => x.Id == id);
+        var existing = storageTable.FirstOrDefault(x => x.Id == id);
         if (existing is not null)
         {
-            _storageTable.Remove(existing);
+            storageTable.Remove(existing);
         }
         return Task.CompletedTask;
     }

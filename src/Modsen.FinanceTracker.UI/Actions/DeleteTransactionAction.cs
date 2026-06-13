@@ -6,28 +6,21 @@ using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public class DeleteTransactionAction : IMenuAction
+public sealed class DeleteTransactionAction(IFinanceService financeService) : IMenuAction
 {
-    private readonly IFinanceService _financeService;
-
-    public DeleteTransactionAction(IFinanceService financeService)
-    {
-        _financeService = financeService;
-    }
-
     public string Name => $"{Constants.MainMenu.ActionDelete}";
 
-    public async Task ExecuteAsync(CancellationToken ct)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var transactions = await FetchTransactionsAsync(ct);
-        if (!transactions.Any())
+        var transactions = await FetchTransactionsAsync(cancellationToken);
+        if (transactions.Count == 0)
         {
             AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found to delete[/]");
             return;
         }
-        
+
         var target = PromptForSelection(transactions);
-        if (ct.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
@@ -36,18 +29,18 @@ public class DeleteTransactionAction : IMenuAction
         {
             return;
         }
-        
-        await FinalizeDeletionAsync(target.Id, ct);
+
+        await FinalizeDeletionAsync(target.Id, cancellationToken);
     }
 
-    private async Task<List<Transaction>> FetchTransactionsAsync(CancellationToken ct)
+    private async Task<List<Transaction>> FetchTransactionsAsync(CancellationToken cancellationToken)
     {
         var filter = new TransactionFilterDto();
-        var result = await _financeService.GetFilteredTransactionsAsync(filter, ct);
+        var result = await financeService.GetFilteredTransactionsAsync(filter, cancellationToken);
         return result.ToList();
     }
 
-    private Transaction PromptForSelection(List<Transaction> transactions)
+    private static Transaction PromptForSelection(List<Transaction> transactions)
     {
         return AnsiConsole.Prompt(
             new SelectionPrompt<Transaction>()
@@ -56,9 +49,9 @@ public class DeleteTransactionAction : IMenuAction
                 .AddChoices(transactions));
     }
 
-    private async Task FinalizeDeletionAsync(Guid id, CancellationToken ct)
+    private async Task FinalizeDeletionAsync(Guid id, CancellationToken cancellationToken)
     {
-        await _financeService.DeleteTransactionAsync(id, ct);
+        await financeService.DeleteTransactionAsync(id, cancellationToken);
         AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Transaction deleted successfully[/]");
     }
 }

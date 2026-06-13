@@ -1,13 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Modsen.FinanceTracker.BLL\Modsen.FinanceTracker.BLL.csproj" />
-    <ProjectReference Include="..\Modsen.FinanceTracker.Domain\Modsen.FinanceTracker.Domain.csproj" />
-    <ProjectReference Include="..\Modsen.FinanceTracker.Infrastructure\Modsen.FinanceTracker.Infrastructure.csproj" />
+    <Compile Remove="Validators\**" />
+    <EmbeddedResource Remove="Validators\**" />
+    <None Remove="Validators\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Validators\" />
+    <ProjectReference Include="..\Modsen.FinanceTracker.BLL\Modsen.FinanceTracker.BLL.csproj" />
+    <ProjectReference Include="..\Modsen.FinanceTracker.Domain\Modsen.FinanceTracker.Domain.csproj" />
+    <ProjectReference Include="..\Modsen.FinanceTracker.Infrastructure\Modsen.FinanceTracker.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

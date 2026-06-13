@@ -2,10 +2,10 @@
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public class ExitAction : IMenuAction
+public sealed class ExitAction : IMenuAction
 {
     public string Name => Constants.MainMenu.ActionExit;
-    public async Task ExecuteAsync(CancellationToken ct)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         Environment.Exit(0);
     }

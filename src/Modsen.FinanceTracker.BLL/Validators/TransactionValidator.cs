@@ -3,7 +3,7 @@ using Modsen.FinanceTracker.Domain.Entities;
 
 namespace Modsen.FinanceTracker.BLL.Validators;
 
-public class TransactionValidator : IValidator<Transaction>
+public sealed class TransactionValidator : IValidator<Transaction>
 {
     public (bool IsValid, string Message) Validate(Transaction t)
     {

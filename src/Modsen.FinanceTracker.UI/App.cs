@@ -2,42 +2,31 @@
 
 namespace Modsen.FinanceTracker.UI;
 
-public class App : IApp
+public sealed class App(IMainMenu mainMenu, IEnumerable<IMenuAction> actions) : IApp
 {
-    private readonly IMainMenu _mainMenu;
-    private readonly IEnumerable<IMenuAction> _actions;
     private bool _isRunning = true;
 
-    public App(IMainMenu mainMenu, IEnumerable<IMenuAction> actions)
+    public async Task RunAsync(CancellationToken cancellationToken = default)
     {
-        _mainMenu = mainMenu;
-        _actions = actions;
-    }
-
-    public async Task RunAsync(CancellationToken ct = default)
-    {
-        while (_isRunning && !ct.IsCancellationRequested)
+        while (_isRunning && !cancellationToken.IsCancellationRequested)
         {
-            var availableChoices = _actions.Select(a => a.Name);
-            var choice = _mainMenu.ShowAndGetChoice(availableChoices);
-            
-            if (ct.IsCancellationRequested)
+            var availableChoices = actions.Select(a => a.Name);
+            var choice = mainMenu.ShowAndGetChoice(availableChoices);
+
+            if (cancellationToken.IsCancellationRequested)
             {
                 break;
             }
 
-            HandleChoice(choice, ct);
+            HandleChoice(choice, cancellationToken);
         }
     }
 
-    private void HandleChoice(string choice,  CancellationToken ct)
+    private void HandleChoice(string choice, CancellationToken cancellationToken)
     {
-        var action = _actions.FirstOrDefault(a => a.Name == choice);
+        var action = actions.FirstOrDefault(a => a.Name == choice);
 
-        if (action is not null)
-        {
-            action.ExecuteAsync(ct);
-        }
+        action?.ExecuteAsync(cancellationToken);
 
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey(true);

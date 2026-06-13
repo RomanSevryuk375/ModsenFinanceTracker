@@ -1,7 +1,6 @@
-﻿namespace Modsen.FinanceTracker.UI.Interfaces
+﻿namespace Modsen.FinanceTracker.UI.Interfaces;
+
+public interface IApp
 {
-    public interface IApp
-    {
-        Task RunAsync(CancellationToken ct = default);
-    }
+    Task RunAsync(CancellationToken cancellationToken = default);
 }

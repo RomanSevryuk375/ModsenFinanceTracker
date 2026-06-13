@@ -4,9 +4,12 @@ using Modsen.FinanceTracker.Domain.Entities;
 
 namespace Modsen.FinanceTracker.BLL.Strategies;
 
-public class TxtExportStrategy : IExportStrategy
+public sealed class TxtExportStrategy : IExportStrategy
 {
-    public async Task ExportAsync(IEnumerable<Transaction> transactions, string filePath, CancellationToken ct)
+    public async Task ExportAsync(
+        IEnumerable<Transaction> transactions, 
+        string filePath, 
+        CancellationToken cancellationToken)
     {
         var txt = new StringBuilder();
         txt.AppendLine(new string('-', 30));
@@ -17,6 +20,6 @@ public class TxtExportStrategy : IExportStrategy
             txt.AppendLine($"{t.Date:d} | {type} | {t.Amount:N2} | {t.Description}");
         }
 
-        await File.WriteAllTextAsync(filePath, txt.ToString(), ct);
+        await File.WriteAllTextAsync(filePath, txt.ToString(), cancellationToken);
     }
 }

@@ -5,22 +5,20 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
-public class CategoryService : ICategoryService
+public sealed class CategoryService(IRepository<Category> repository) : ICategoryService
 {
-    private readonly IRepository<Category> _repository;
-
-    public CategoryService(IRepository<Category> repository)
+    public async Task<IEnumerable<Category>> GetAllCategoriesAsync(
+        CancellationToken cancellationToken = default)
     {
-        _repository = repository;
+        return await repository.GetAllAsync(
+            cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<Category>> GetAllCategoriesAsync(CancellationToken ct = default)
+    public async Task<IEnumerable<Category>> GetCategoriesByTypeAsync(
+        TransactionType type, 
+        CancellationToken cancellationToken = default)
     {
-        return await _repository.GetAllAsync(ct: ct);
-    }
-
-    public async Task<IEnumerable<Category>> GetCategoriesByTypeAsync(TransactionType type, CancellationToken ct = default)
-    {
-        return await _repository.GetAllAsync(c => c.Type == type, ct: ct);
+        return await repository.GetAllAsync(
+            c => c.Type == type, cancellationToken: cancellationToken);
     }
 }

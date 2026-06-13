@@ -6,69 +6,60 @@ using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public class AddTransactionAction : IMenuAction
+public sealed class AddTransactionAction(
+    IFinanceService financeService,
+    ITransactionFactory factory,
+    ICategoryService categoryService) : IMenuAction
 {
-    private readonly IFinanceService _financeService;
-    private readonly ITransactionFactory _factory;
-    private readonly ICategoryService _categoryService;
-
-    public AddTransactionAction(
-        IFinanceService financeService, 
-        ITransactionFactory factory,
-        ICategoryService categoryService)
-    {
-        _financeService = financeService;
-        _factory = factory;
-        _categoryService = categoryService;
-    }
-
     public string Name => Constants.MainMenu.ActionAdd;
 
-    public async Task ExecuteAsync(CancellationToken ct)
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         try
         {
             var amount = PromptAmount();
             var type = PromptTransactionType();
-            var category = await GetSelectedCategoryAsync(type, ct);
+            var category = await GetSelectedCategoryAsync(type, cancellationToken);
             if (category is null)
             {
                 return;
             }
 
             var description = PromptDescription();
-            if (ct.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            await SaveTransactionAsync(type, amount, description, category.Id, ct);
+            await SaveTransactionAsync(type, amount, description, category.Id, cancellationToken);
         }
-        catch (ArgumentException ex) 
+        catch (ArgumentException ex)
         {
             AnsiConsole.MarkupLine($"[red]Validation Error: {ex.Message}[/]");
         }
     }
-    
 
-    private decimal PromptAmount()
+
+    private static decimal PromptAmount()
     {
         return AnsiConsole.Prompt(new TextPrompt<decimal>("Enter amount:"));
     }
 
-    private TransactionType PromptTransactionType()
+    private static TransactionType PromptTransactionType()
     {
         var isIncome = AnsiConsole.Confirm($"Is this an [{Constants.Colors.Info}]Income[/]?");
-        return isIncome 
-            ? TransactionType.Income 
+        return isIncome
+            ? TransactionType.Income
             : TransactionType.Expense;
     }
 
-    private async Task<Category?> GetSelectedCategoryAsync(TransactionType type, CancellationToken ct)
+    private async Task<Category?> GetSelectedCategoryAsync(
+        TransactionType type,
+        CancellationToken cancellationToken)
     {
-        var categories = (await _categoryService.GetCategoriesByTypeAsync(type, ct)).ToList();
-        
-        if (!categories.Any())
+        var categories = (await categoryService.GetCategoriesByTypeAsync(
+            type, cancellationToken)).ToList();
+        if (categories.Count == 0)
         {
             AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]No categories found. Seed data first.[/]");
             return null;
@@ -81,20 +72,22 @@ public class AddTransactionAction : IMenuAction
                 .AddChoices(categories));
     }
 
-    private string PromptDescription()
+    private static string PromptDescription()
     {
         return AnsiConsole.Ask<string>("Enter description:");
     }
 
     private async Task SaveTransactionAsync(
         TransactionType type,
-        decimal amount, 
+        decimal amount,
         string desc,
         Guid categoryId,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        var transaction = _factory.CreateTransaction(type, amount, desc, categoryId);
-        await _financeService.AddTransactionAsync(transaction, ct);
+        var transaction = factory.CreateTransaction(type, amount, desc, categoryId);
+
+        await financeService.AddTransactionAsync(transaction, cancellationToken);
+
         AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Transaction added successfully[/]");
     }
 }

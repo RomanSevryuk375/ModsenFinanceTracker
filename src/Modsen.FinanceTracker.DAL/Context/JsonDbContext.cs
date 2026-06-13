@@ -5,13 +5,13 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Context;
 
-public class JsonDbContext : IDataContext
+public sealed class JsonDbContext : IDataContext
 {
     private readonly string _filePath;
     private readonly JsonSerializerOptions _options;
 
-    public List<Transaction> Transactions { get; private set; } = new();
-    public List<Category> Categories { get; private set; } = new();
+    public List<Transaction> Transactions { get; private set; } = [];
+    public List<Category> Categories { get; private set; } = [];
 
     public JsonDbContext(string filePath)
     {
@@ -19,14 +19,14 @@ public class JsonDbContext : IDataContext
         _options = new JsonSerializerOptions { WriteIndented = true };
     }
 
-    public async Task LoadAsync(CancellationToken ct = default)
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         if (!File.Exists(_filePath))
         {
             return;
         }
 
-        var json = await File.ReadAllTextAsync(_filePath, ct);
+        var json = await File.ReadAllTextAsync(_filePath, cancellationToken);
         var data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
 
         if (data is not null)
@@ -36,7 +36,7 @@ public class JsonDbContext : IDataContext
         }
     }
     
-    public async Task SaveChangesAsync(CancellationToken ct = default)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var data = new JsonDataModel
         {
@@ -44,6 +44,7 @@ public class JsonDbContext : IDataContext
             Categories = Categories
         };
         var json = JsonSerializer.Serialize(data, _options);
-        await File.WriteAllTextAsync(_filePath, json, ct);
+
+        await File.WriteAllTextAsync(_filePath, json, cancellationToken);
     }
 }

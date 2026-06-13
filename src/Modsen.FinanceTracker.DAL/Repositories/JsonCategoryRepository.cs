@@ -5,22 +5,18 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
-public class JsonCategoryRepository : BaseRepository<Category>, ICategoryRepository
+public sealed class JsonCategoryRepository(JsonDbContext context)
+    : BaseRepository<Category>(context.Categories), ICategoryRepository
 {
-    private readonly JsonDbContext _context;
 
-    public JsonCategoryRepository(JsonDbContext context) : base(context.Categories)
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        _context = context;
-    }
-
-    public async Task SeedAsync(CancellationToken ct = default)
-    {
-        if (!_context.Categories.Any())
+        if (context.Categories.Count == 0)
         {
-            await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income), ct);
-            await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense), ct);
-            await _context.SaveChangesAsync(ct);
+            await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income), cancellationToken);
+            await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense), cancellationToken);
+
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

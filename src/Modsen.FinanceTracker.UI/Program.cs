@@ -17,27 +17,27 @@ class Program
     static async Task Main(string[] args)
     {
         using var cts = new CancellationTokenSource();
-        
+
         Console.CancelKeyPress += (s, e) =>
         {
-            e.Cancel = true; 
-            cts.Cancel();  
+            e.Cancel = true;
+            cts.Cancel();
             Console.WriteLine("\nCancellation requested...");
         };
 
         try
         {
             var config = AppConfiguration.Instance;
-        
+
             var context = new JsonDbContext(config.JsonDbPath);
             await context.LoadAsync(cts.Token);
-        
+
             var categoryRepo = new JsonCategoryRepository(context);
-            await categoryRepo.SeedAsync(cts.Token); 
+            await categoryRepo.SeedAsync(cts.Token);
             var transactionRepo = new JsonTransactionRepository(context);
 
             var transactionValidator = new TransactionValidator();
-        
+
             var financeService = new FinanceService(transactionRepo, transactionValidator);
             var categoryService = new CategoryService(categoryRepo);
             var reportService = new ReportService(transactionRepo);
@@ -45,7 +45,7 @@ class Program
             var transactionFactory = new TransactionFactory();
 
             var transactionListView = new TransactionListView();
-            
+
             var actions = new List<IMenuAction>
             {
                 new AddTransactionAction(financeService, transactionFactory, categoryService),
@@ -58,7 +58,7 @@ class Program
             };
 
             var menu = new MainMenu();
-        
+
             var app = new App(menu, actions);
             await app.RunAsync(cts.Token);
         }

@@ -7,5 +7,5 @@ public interface IExportStrategy
     Task ExportAsync(
         IEnumerable<Transaction> transactions, 
         string filePath, 
-        CancellationToken ct);
+        CancellationToken cancellationToken);
 }

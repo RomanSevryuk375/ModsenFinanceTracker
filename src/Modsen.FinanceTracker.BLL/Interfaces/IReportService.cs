@@ -1,7 +1,9 @@
-﻿namespace Modsen.FinanceTracker.BLL.Interfaces
+﻿namespace Modsen.FinanceTracker.BLL.Interfaces;
+
+public interface IReportService
 {
-    public interface IReportService
-    {
-        Task ExportAsync(IExportStrategy strategy, string filePath, CancellationToken ct);
-    }
+    Task ExportAsync(
+        IExportStrategy strategy,
+        string filePath,
+        CancellationToken cancellationToken);
 }

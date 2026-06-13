@@ -3,5 +3,5 @@
 public interface IMenuAction
 {
     string Name { get; }
-    Task ExecuteAsync(CancellationToken ct); 
+    Task ExecuteAsync(CancellationToken cancellationToken); 
 }

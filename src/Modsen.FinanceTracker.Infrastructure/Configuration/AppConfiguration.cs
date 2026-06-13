@@ -1,6 +1,6 @@
 namespace Modsen.FinanceTracker.Infrastructure.Configuration;
 
-public class AppConfiguration
+public sealed class AppConfiguration
 {
     private static readonly Lazy<AppConfiguration> _instance = 
         new (() => new AppConfiguration());

@@ -1,9 +1,8 @@
 ﻿using Modsen.FinanceTracker.UI.Models;
 
-namespace Modsen.FinanceTracker.UI.Interfaces
+namespace Modsen.FinanceTracker.UI.Interfaces;
+
+public interface ITransactionListView
 {
-    public interface ITransactionListView
-    {
-        void Render(IEnumerable<TransactionRowModel> rows);
-    }
+    void Render(IEnumerable<TransactionRowModel> rows);
 }

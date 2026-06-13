@@ -3,7 +3,7 @@ using Modsen.FinanceTracker.Domain.Entities;
 
 namespace Modsen.FinanceTracker.BLL.DTOs;
 
-public class TransactionFilterDto
+public sealed record TransactionFilterDto
 {
     public string? SearchTerm { get; set; }
     public DateTime? From { get; set; }

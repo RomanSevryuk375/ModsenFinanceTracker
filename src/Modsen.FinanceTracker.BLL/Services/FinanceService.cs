@@ -5,49 +5,54 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
-public class FinanceService : IFinanceService
+public sealed class FinanceService(
+    IRepository<Transaction> repository, 
+    IValidator<Transaction> validator) : IFinanceService
 {
-    private readonly IRepository<Transaction> _repository;
-    private readonly IValidator<Transaction> _validator;
-
-    public FinanceService(IRepository<Transaction> repository, IValidator<Transaction> validator)
+    public async Task AddTransactionAsync(
+        Transaction transaction, 
+        CancellationToken cancellationToken = default)
     {
-        _repository = repository;
-        _validator = validator;
-    }
-
-    public async Task AddTransactionAsync(Transaction transaction, CancellationToken ct = default)
-    {
-        var (isValid, message) = _validator.Validate(transaction);
+        var (isValid, message) = validator.Validate(transaction);
         if (!isValid)
         {
             throw new ArgumentException(message);
         }
-        
-        await _repository.AddAsync(transaction, ct);
+
+        await repository.AddAsync(transaction, cancellationToken);
     }
 
-    public async Task DeleteTransactionAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteTransactionAsync(
+        Guid id, 
+        CancellationToken cancellationToken = default)
     {
-        await _repository.DeleteAsync(id, ct);
+        await repository.DeleteAsync(id, cancellationToken);
     }
 
-    public async Task UpdateTransactionAsync(Transaction transaction, CancellationToken ct = default)
+    public async Task UpdateTransactionAsync(
+        Transaction transaction, 
+        CancellationToken cancellationToken = default)
     {
-        await _repository.UpdateAsync(transaction, ct);
+        await repository.UpdateAsync(transaction, cancellationToken);
     }
 
-    public async Task<decimal> GetBalanceAsync(CancellationToken ct = default)
+    public async Task<decimal> GetBalanceAsync(
+        CancellationToken cancellationToken = default)
     {
-        var transactions = await _repository.GetAllAsync(ct: ct);
+        var transactions = await repository.GetAllAsync(
+            cancellationToken: cancellationToken);
 
-        return transactions.Sum(t => t is IncomeTransaction ? t.Amount : -t.Amount);
+        return transactions.Sum(t => 
+            t is IncomeTransaction 
+                ? t.Amount 
+                : -t.Amount);
     }
 
     public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(
         TransactionFilterDto filter,
-        CancellationToken ct = default)
+        CancellationToken cancellationToken = default)
     {
-        return await _repository.GetAllAsync(filter.ToExpression(), ct: ct);
+        return await repository.GetAllAsync(
+            filter.ToExpression(), cancellationToken: cancellationToken);
     }
 }
