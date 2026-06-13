@@ -16,7 +16,11 @@ public sealed class JsonDbContext : IDataContext
     public JsonDbContext(string filePath)
     {
         _filePath = filePath;
-        _options = new JsonSerializerOptions { WriteIndented = true };
+        _options = new JsonSerializerOptions 
+        { 
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true
+        };
     }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)

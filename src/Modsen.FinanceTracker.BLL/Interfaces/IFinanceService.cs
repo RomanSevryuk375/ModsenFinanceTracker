@@ -1,10 +1,12 @@
 ﻿using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.Domain.Events;
 
 namespace Modsen.FinanceTracker.BLL.Interfaces;
 
 public interface IFinanceService
 {
+    event EventHandler<CategoryLimitExceededEventArgs>? OnCategoryLimitExceeded;
     Task AddTransactionAsync(
         Transaction transaction, 
         CancellationToken cancellationToken = default);

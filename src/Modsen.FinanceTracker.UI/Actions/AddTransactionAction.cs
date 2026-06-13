@@ -17,7 +17,6 @@ public sealed class AddTransactionAction(
     {
         try
         {
-            var amount = PromptAmount();
             var type = PromptTransactionType();
             var category = await GetSelectedCategoryAsync(type, cancellationToken);
             if (category is null)
@@ -25,6 +24,7 @@ public sealed class AddTransactionAction(
                 return;
             }
 
+            var amount = await PromptAmount(category, cancellationToken);
             var description = PromptDescription();
             if (cancellationToken.IsCancellationRequested)
             {
@@ -40,9 +40,28 @@ public sealed class AddTransactionAction(
     }
 
 
-    private static decimal PromptAmount()
+    private async Task<decimal> PromptAmount(Category category, CancellationToken cancellationToken)
     {
-        return AnsiConsole.Prompt(new TextPrompt<decimal>("Enter amount:"));
+        var currentBalance = await financeService.GetBalanceAsync(cancellationToken);
+
+        return AnsiConsole.Prompt(new TextPrompt<decimal>("Enter amount:")
+            .Validate(amount =>
+            {
+                if (amount <= 0)
+                {
+                    return ValidationResult.Error(
+                        $"[{Constants.Colors.Error}]Amount must be positive.[/]");
+                }
+
+                if (category.Type is TransactionType.Expense && (currentBalance - amount < 0))
+                {
+                    return ValidationResult.Error(
+                        $"[{Constants.Colors.Error}]Your current balance is {currentBalance:N2}." +
+                        $" Amount will become negative.[/]");
+                }
+
+                return ValidationResult.Success();
+            }));
     }
 
     private static TransactionType PromptTransactionType()

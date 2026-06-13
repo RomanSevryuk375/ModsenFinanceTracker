@@ -13,8 +13,8 @@ public sealed class JsonCategoryRepository(JsonDbContext context)
     {
         if (context.Categories.Count == 0)
         {
-            await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income), cancellationToken);
-            await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense), cancellationToken);
+            await AddAsync(new Category(Guid.NewGuid(), "Salary", TransactionType.Income, null), cancellationToken);
+            await AddAsync(new Category(Guid.NewGuid(), "Food", TransactionType.Expense, 700m), cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
         }
