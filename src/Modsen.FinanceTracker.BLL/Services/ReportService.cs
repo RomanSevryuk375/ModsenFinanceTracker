@@ -1,10 +1,9 @@
 using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain.Entities;
 using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
-public sealed class ReportService(IRepository<Transaction> repository) : IReportService
+public sealed class ReportService(ITransactionRepository repository) : IReportService
 {
     public async Task ExportAsync(
         IExportStrategy strategy, 

@@ -5,7 +5,7 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
-public sealed class CategoryService(IRepository<Category> repository) : ICategoryService
+public sealed class CategoryService(ICategoryRepository repository) : ICategoryService
 {
     public async Task<IEnumerable<Category>> GetAllCategoriesAsync(
         CancellationToken cancellationToken = default)

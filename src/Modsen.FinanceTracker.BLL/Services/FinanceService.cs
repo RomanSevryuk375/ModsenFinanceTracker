@@ -6,7 +6,7 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class FinanceService(
-    IRepository<Transaction> repository, 
+    ITransactionRepository repository, 
     IValidator<Transaction> validator) : IFinanceService
 {
     public async Task AddTransactionAsync(
