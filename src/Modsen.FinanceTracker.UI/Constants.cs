@@ -15,16 +15,30 @@ public static class Constants
         public const string ActionBalance = "Check Balance";
         public const string ActionExit = "Exit";
         public const string ActionExportReport = "Export Reports";
+        public const string ActionAnalytics = "Analytics";
     }
 
     public static class Tables
     {
-        public const string TransactionsTableTitle = "List of Transactions";
-        public const string TransactionsTableId = "Id";
-        public const string TransactionsDate = "Date";
-        public const string TransactionsAmount = "Amount";
-        public const string TransactionDescription = "Description";
-        public const string TransactionCategory = "Category";
+        public const string Title = "List of Transactions";
+        public const string AnalyticsTitle = "Analytics of Transactions";
+        public const string Id = "Id";
+        public const string Date = "Date";
+        public const string Amount = "Amount";
+        public const string Description = "Description";
+        public const string Category = "Category";
+        public const string Percent = "%";
+    }
+
+    public static class BreakdownChart
+    {
+        public const string Name = "Expenses Breakdown";
+        public const int Width = 60;
+        public const int PaddingTop = 1;
+        public const int PaddingLeft = 2;
+        public const int PaddingRight = 2;
+        public const int PaddingBottom = 1;
+
     }
 
     public static class Colors

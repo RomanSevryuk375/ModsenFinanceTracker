@@ -4,20 +4,20 @@ using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Views;
 
-public class TransactionListView : ITransactionListView
+public sealed class TransactionListView : ITransactionListView
 {
     public void Render(IEnumerable<TransactionRowModel> rows)
     {
         var table = new Table()
             .Border(TableBorder.Rounded)
-            .Title($"[{Constants.Colors.Primary}]{Constants.Tables.TransactionsTableTitle}[/]")
+            .Title($"[{Constants.Colors.Primary}]{Constants.Tables.Title}[/]")
             .LeftAligned();
 
-        table.AddColumn($"{Constants.Tables.TransactionsTableId}");
-        table.AddColumn($"{Constants.Tables.TransactionsDate}");
-        table.AddColumn($"{Constants.Tables.TransactionCategory}");
-        table.AddColumn($"{Constants.Tables.TransactionDescription}");
-        table.AddColumn($"{Constants.Tables.TransactionsAmount}");
+        table.AddColumn($"{Constants.Tables.Id}");
+        table.AddColumn($"{Constants.Tables.Date}");
+        table.AddColumn($"{Constants.Tables.Category}");
+        table.AddColumn($"{Constants.Tables.Description}");
+        table.AddColumn($"{Constants.Tables.Amount}");
 
         foreach (var row in rows)
         {
