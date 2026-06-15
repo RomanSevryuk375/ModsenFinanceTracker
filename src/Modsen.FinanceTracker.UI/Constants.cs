@@ -1,4 +1,4 @@
-﻿namespace Modsen.FinanceTracker.UI;
+namespace Modsen.FinanceTracker.UI;
 
 public static class Constants
 {
@@ -23,6 +23,11 @@ public static class Constants
         public const string CreateWallet = "Create Wallet";
         public const string ViewWallets = "View Wallets";
         public const string DeleteWallet = "Delete Wallet";
+
+        public const string ManageTemplates = "Manage Subscriptions";
+        public const string AddTemplate = "Add Subscription";
+        public const string ViewTemplates = "View Subscriptions";
+        public const string DeleteTemplate = "Delete Subscription";
 
         public const string BackToMainMenu = "Back to Main Menu";
     }
@@ -49,6 +54,11 @@ public static class Constants
         public const string NextPageButton = "Next Page";
         public const string PrevPageButton = "Previous Page";
         public const string ExitButton = "Exit to Menu";
+
+        public const string TemplatesTitle = "Active Subscriptions (Templates)";
+        public const string TemplateName = "Name";
+        public const string Period = "Period";
+        public const string NextDate = "Next Date";
     }
 
     public static class BreakdownChart
@@ -91,6 +101,9 @@ public static class Constants
         public const string DeleteWallet = "Wallet deleted successfully";
 
         public const string ExportReport = "Report exported successfully to:";
+
+        public const string AddTemplate = "Subscription template added successfully";
+        public const string DeleteTemplate = "Subscription template deleted successfully";
     }
 
     public static class Prompts
@@ -126,6 +139,13 @@ public static class Constants
             $"{name} ({currency}) - Balance: {balance:N2}";
 
         public const string EnterPassword = "Enter application password:";
+
+        public const string TemplateManagementTitle = "Subscription Management: ";
+        public const string TemplateName = "Enter subscription name (e.g., Netflix, Rent):";
+        public const string TemplatePeriod = "Select charging period:";
+        public const string NextExecutionDate = "Enter the date of the FIRST charge:";
+        public const string DeleteTemplate = "Choose subscription to delete:";
+        public const string DeleteTemplateConfirmation = "Are you sure you want to delete this subscription?";
     }
 
     public static class Info
@@ -149,6 +169,8 @@ public static class Constants
         public const string CurrencyLength = $"[{Colors.Error}]Currency must be exactly 3 characters.[/]";
 
         public const string InvalidPassword = $"[{Colors.Error}]Invalid password! Access denied.[/]";
+
+        public const string TemplateNotFound = $"[{Colors.Info}]No active subscriptions found.[/]";
     }
 
     public static class UI

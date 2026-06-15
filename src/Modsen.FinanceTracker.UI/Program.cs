@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Modsen.FinanceTracker.BLL.Factories;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.BLL.Services;
@@ -10,6 +10,7 @@ using Modsen.FinanceTracker.Domain.Entities;
 using Modsen.FinanceTracker.Domain.Interfaces;
 using Modsen.FinanceTracker.Infrastructure.Configuration;
 using Modsen.FinanceTracker.UI.Actions;
+using Modsen.FinanceTracker.UI.Actions.TemplateActions;
 using Modsen.FinanceTracker.UI.Actions.TransactionActions;
 using Modsen.FinanceTracker.UI.Actions.WalletActions;
 using Modsen.FinanceTracker.UI.Interfaces;
@@ -21,7 +22,7 @@ namespace Modsen.FinanceTracker.UI;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
+    private static async Task Main()
     {
         using var cts = new CancellationTokenSource();
 
@@ -49,12 +50,14 @@ internal class Program
             services.AddSingleton<ICategoryService, CategoryService>();
             services.AddSingleton<IReportService, ReportService>();
             services.AddSingleton<IWalletService, WalletService>();
+            services.AddSingleton<ISchedulerService, SchedulerService>();
 
             services.AddTransient<ITransactionFactory, TransactionFactory>();
 
             services.AddTransient<ITransactionListView, TransactionListView>();
             services.AddTransient<IAnalyticsListView, AnalyticsListView>();
             services.AddTransient<IWalletListView, WalletListView>();
+            services.AddTransient<ITemplateListView, TemplateListView>();
 
             services.AddTransient<IWalletMenuAction, ViewWalletsAction>();
             services.AddTransient<IWalletMenuAction, CreateWalletAction>();
@@ -66,6 +69,11 @@ internal class Program
             services.AddTransient<ITransactionMenuAction, UpdateTransactionAction>();
             services.AddTransient<ITransactionMenuAction, DeleteTransactionAction>();
             services.AddTransient<IMenuAction, ManageTransactionsAction>();
+
+            services.AddTransient<ITemplateMenuAction, AddTemplateAction>();
+            services.AddTransient<ITemplateMenuAction, ViewTemplatesAction>();
+            services.AddTransient<ITemplateMenuAction, DeleteTemplateAction>();
+            services.AddTransient<IMenuAction, ManageTemplatesAction>();
 
             services.AddTransient<IMenuAction, CheckBalanceAction>();
             services.AddTransient<IMenuAction, AnalyticsAction>();

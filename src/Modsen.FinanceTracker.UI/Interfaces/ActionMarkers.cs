@@ -1,4 +1,4 @@
-﻿namespace Modsen.FinanceTracker.UI.Interfaces;
+namespace Modsen.FinanceTracker.UI.Interfaces;
 
 public interface IMenuAction
 {
@@ -8,3 +8,4 @@ public interface IMenuAction
 
 public interface IWalletMenuAction : IMenuAction { }
 public interface ITransactionMenuAction : IMenuAction { }
+public interface ITemplateMenuAction : IMenuAction { }

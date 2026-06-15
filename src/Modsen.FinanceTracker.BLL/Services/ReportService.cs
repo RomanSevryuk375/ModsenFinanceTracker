@@ -14,6 +14,6 @@ public sealed class ReportService(IWalletRepository repository) : IReportService
     {
         Wallet wallet = await repository.GetByIdAsync(walletId, cancellationToken) ??
             throw new ArgumentException($"Wallet {walletId} not found");
-        await strategy.ExportAsync(wallet.MutableTransactions, filePath, cancellationToken);
+        await strategy.ExportAsync(wallet.Transactions, filePath, cancellationToken);
     }
 }

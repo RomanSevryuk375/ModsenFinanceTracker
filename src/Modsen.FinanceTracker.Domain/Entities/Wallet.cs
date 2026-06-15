@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
@@ -9,20 +9,26 @@ public sealed class Wallet : IEntity
 
     [JsonInclude]
     [JsonPropertyName("Transactions")]
-    private List<Transaction> Transactions { get; set; } = [];
+    private List<Transaction> InternalTransactions { get; set; } = [];
+
+    [JsonInclude]
+    [JsonPropertyName("TransactionTemplates")]
+    private List<RecurringTransactionTemplate> InternalTransactionTemplates { get; set; } = [];
 
     public Guid Id { get; init; }
 
     [JsonInclude]
     public string Name { get; private set; } = string.Empty;
 
-    public decimal Balance => CalculateBalance(Transactions);
+    public decimal Balance => CalculateBalance(InternalTransactions);
 
     [JsonInclude]
     public string BaseCurrency { get; private set; } = string.Empty;
 
     [JsonIgnore]
-    public IReadOnlyList<Transaction> MutableTransactions => Transactions.AsReadOnly();
+    public IReadOnlyList<Transaction> Transactions => InternalTransactions.AsReadOnly();
+    [JsonIgnore]
+    public IReadOnlyList<RecurringTransactionTemplate> Templates => InternalTransactionTemplates.AsReadOnly();
 
     public Wallet() { }
 
@@ -45,12 +51,12 @@ public sealed class Wallet : IEntity
 
     public Result AddTransaction(Transaction transaction)
     {
-        if (IsExpensValid(transaction))
+        if (WouldCauseNegativeBalance(transaction))
         {
             return Result.Fail("Fail to add transaction. Balance wil become negative.");
         }
 
-        Transactions.Add(transaction);
+        InternalTransactions.Add(transaction);
         return Result.Success();
     }
 
@@ -61,7 +67,7 @@ public sealed class Wallet : IEntity
             return Result.Fail("Cannot remove income: wallet balance would become negative.");
         }
 
-        Transactions.Remove(transaction);
+        InternalTransactions.Remove(transaction);
         return Result.Success();
     }
 
@@ -90,6 +96,20 @@ public sealed class Wallet : IEntity
         return updateResult;
     }
 
+    public Result AddTransactionTemplate(RecurringTransactionTemplate template)
+    {
+        InternalTransactionTemplates.Add(template);
+
+        return Result.Success();
+    }
+
+    public Result RemoveTransactionTemplate(RecurringTransactionTemplate template)
+    {
+        InternalTransactionTemplates.Remove(template);
+
+        return Result.Success();
+    }
+
     private bool ImpossibleToRemove(Transaction transaction) =>
         transaction is IncomeTransaction && (Balance - transaction.Amount < 0);
 
@@ -99,6 +119,6 @@ public sealed class Wallet : IEntity
         transactions.OfType<ExpenseTransaction>().Sum(x => x.Amount);
     }
 
-    private bool IsExpensValid(Transaction transaction) =>
+    private bool WouldCauseNegativeBalance(Transaction transaction) =>
         transaction is ExpenseTransaction && Balance - transaction.Amount < 0;
 }

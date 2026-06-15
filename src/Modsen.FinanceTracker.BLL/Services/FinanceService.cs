@@ -1,4 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.DTOs;
+using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Domain;
 using Modsen.FinanceTracker.Domain.Entities;
@@ -56,7 +56,7 @@ public sealed class FinanceService(
             return Result.Fail($"Wallet {walletId} not found.");
         }
 
-        Transaction? transaction = wallet.MutableTransactions.FirstOrDefault(x => x.Id == transactionId);
+        Transaction? transaction = wallet.Transactions.FirstOrDefault(x => x.Id == transactionId);
         if (transaction is null)
         {
             return Result.Fail($"Transaction {transactionId} not found.");
@@ -85,7 +85,7 @@ public sealed class FinanceService(
             return Result.Fail($"Wallet {walletId} not found.");
         }
 
-        Transaction? transaction = wallet.MutableTransactions.FirstOrDefault(x => x.Id == transactionId);
+        Transaction? transaction = wallet.Transactions.FirstOrDefault(x => x.Id == transactionId);
         if (transaction is null)
         {
             return Result.Fail($"Transaction {transactionId} not found.");
@@ -127,7 +127,7 @@ public sealed class FinanceService(
 
         Func<Transaction, bool> isMatch = filter.ToFilter();
 
-        var filteredList = wallet.MutableTransactions
+        var filteredList = wallet.Transactions
             .Where(isMatch)
             .ToList();
 
@@ -146,7 +146,8 @@ public sealed class FinanceService(
             To = DateTime.Now
         };
 
-        Result<IReadOnlyList<Transaction>> filterResult = await GetFilteredTransactionsAsync(walletId, filter, cancellationToken);
+        Result<IReadOnlyList<Transaction>> filterResult = await GetFilteredTransactionsAsync(
+            walletId, filter, cancellationToken);
         if (filterResult.IsFailure)
         {
             return;
@@ -165,5 +166,53 @@ public sealed class FinanceService(
                 ExcessAmount = transactionsAmount + transaction.Amount - transaction.Category.BudgetLimit.Value
             });
         }
+    }
+
+    public async Task<Result> AddTemplateAsync(
+        Guid walletId,
+        RecurringTransactionTemplate template,
+        CancellationToken cancellationToken = default)
+    {
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail($"Wallet {walletId} not found.");
+        }
+
+        Result addResult = wallet.AddTransactionTemplate(template);
+        if (addResult.IsFailure)
+        {
+            return Result.Fail(addResult.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteTemplateAsync(
+        Guid walletId,
+        Guid templateId,
+        CancellationToken cancellationToken = default)
+    {
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail($"Wallet {walletId} not found.");
+        }
+
+        RecurringTransactionTemplate? template = wallet.Templates.FirstOrDefault(t => t.Id == templateId);
+        if (template is null)
+        {
+            return Result.Fail("Template not found in this wallet.");
+        }
+
+        Result deleteResult = wallet.RemoveTransactionTemplate(template);
+        if (deleteResult.IsFailure)
+        {
+            return Result.Fail(deleteResult.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
     }
 }

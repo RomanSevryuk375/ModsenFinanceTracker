@@ -1,4 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.Interfaces;
+using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Infrastructure.Configuration;
 using Modsen.FinanceTracker.Infrastructure.Security;
 using Modsen.FinanceTracker.UI.Interfaces;
@@ -9,7 +9,8 @@ namespace Modsen.FinanceTracker.UI;
 public sealed class App(
     IMainMenu mainMenu,
     IEnumerable<IMenuAction> actions,
-    IFinanceService financeService) : IApp
+    IFinanceService financeService,
+    ISchedulerService schedulerService) : IApp
 {
     private bool _isRunning = true;
 
@@ -17,7 +18,7 @@ public sealed class App(
     {
         if (!AuthenticateUser())
         {
-            return; 
+            return;
         }
 
         financeService.OnCategoryLimitExceeded += (sender, args) =>
@@ -26,6 +27,17 @@ public sealed class App(
                 $"[yellow]WARNING: You exceeded the budget limit for {args.CategoryName} " +
                 $"by {args.ExcessAmount:N2}![/]");
         };
+
+        schedulerService.OnTransactionWrittenOff += (sender, args) =>
+        {
+            AnsiConsole.MarkupLine(
+                $"[{Constants.Colors.Info}]AUTO-PAYMENT:[/] {args.Amount:N2} for '{args.Description}' " +
+                $"deducted from '{args.WalletName}'. Next due: {args.NextExecutionDate:d}");
+        };
+        await schedulerService.CheckAndProcessRecurringTransactionsAsync(cancellationToken);
+
+        Console.WriteLine("Press any key to continue to Main Menu...");
+        Console.ReadKey(true);
 
         while (_isRunning && !cancellationToken.IsCancellationRequested)
         {

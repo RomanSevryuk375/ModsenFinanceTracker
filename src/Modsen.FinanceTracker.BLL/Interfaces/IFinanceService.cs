@@ -1,4 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.DTOs;
+using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.Domain;
 using Modsen.FinanceTracker.Domain.Entities;
 using Modsen.FinanceTracker.Domain.Events;
@@ -33,5 +33,15 @@ public interface IFinanceService
         decimal newAmount, 
         string newDescription, 
         Guid transactionId, 
+        CancellationToken cancellationToken = default);
+
+    public Task<Result> AddTemplateAsync(
+        Guid walletId,
+        RecurringTransactionTemplate template,
+        CancellationToken cancellationToken = default);
+
+    public Task<Result> DeleteTemplateAsync(
+        Guid walletId,
+        Guid templateId,
         CancellationToken cancellationToken = default);
 }
