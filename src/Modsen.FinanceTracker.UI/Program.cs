@@ -49,12 +49,12 @@ class Program
             services.AddTransient<ITransactionListView, TransactionListView>();
             services.AddTransient<IAnalyticsListView, AnalyticsListView>();
 
+            services.AddTransient<IMenuAction, ViewTransactionAction>();
+            services.AddTransient<IMenuAction, CheckBalanceAction>();
+            services.AddTransient<IMenuAction, AnalyticsAction>();
             services.AddTransient<IMenuAction, AddTransactionAction>();
             services.AddTransient<IMenuAction, UpdateTransactionAction>();
-            services.AddTransient<IMenuAction, CheckBalanceAction>();
             services.AddTransient<IMenuAction, DeleteTransactionAction>();
-            services.AddTransient<IMenuAction, ViewTransactionAction>();
-            services.AddTransient<IMenuAction, AnalyticsAction>();
             services.AddTransient<IMenuAction, ExportReportAction>();
             services.AddTransient<IMenuAction, ExitAction>();
 

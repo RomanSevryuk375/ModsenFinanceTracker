@@ -28,6 +28,11 @@ public static class Constants
         public const string Description = "Description";
         public const string Category = "Category";
         public const string Percent = "%";
+        public const int PageSize = 5;
+        public const string NavigationTitle = "Navigation: ";
+        public const string NextPageButton = "Next Page";
+        public const string PrevPageButton = "Previous Page";
+        public const string ExitButton = "Exit to Menu";
     }
 
     public static class BreakdownChart
