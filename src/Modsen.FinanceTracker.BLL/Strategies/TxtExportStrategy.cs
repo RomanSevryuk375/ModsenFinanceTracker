@@ -1,4 +1,5 @@
 using System.Text;
+using Modsen.FinanceTracker.BLL.Constants;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Domain.Entities;
 
@@ -12,12 +13,20 @@ public sealed class TxtExportStrategy : IExportStrategy
         CancellationToken cancellationToken)
     {
         var txt = new StringBuilder();
-        txt.AppendLine(new string('-', 30));
+
+        txt.AppendLine(ReportConstants.ReportTitle);
+        txt.AppendLine(new string(ReportConstants.Txt.SeparatorChar, ReportConstants.Txt.SeparatorLength));
 
         foreach (Transaction t in transactions)
         {
-            string type = t is IncomeTransaction ? "[+]" : "[-]";
-            txt.AppendLine($"{t.Date:d} | {type} | {t.Amount:N2} | {t.Description}");
+            string type = t is IncomeTransaction 
+                ? ReportConstants.Types.TxtIncome 
+                : ReportConstants.Types.TxtExpense;
+            string categoryName = t.Category?.Name 
+                ?? ReportConstants.NotAvailable;
+            string sep = ReportConstants.Txt.ColumnSeparator;
+
+            txt.AppendLine($"{t.Date:d}{sep}{type}{sep}{categoryName}{sep}{t.Amount:N2}{sep}{t.Description}");
         }
 
         await File.WriteAllTextAsync(filePath, txt.ToString(), cancellationToken);

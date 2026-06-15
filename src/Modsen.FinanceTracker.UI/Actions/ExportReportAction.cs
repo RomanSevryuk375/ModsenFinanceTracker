@@ -42,7 +42,7 @@ public sealed class ExportReportAction(
         return AnsiConsole.Prompt(
             new SelectionPrompt<string>()
                 .Title(Constants.Prompts.ExportFormat)
-                .AddChoices("CSV", "TXT"));
+                .AddChoices("CSV", "TXT", "PDF", "DOCX"));
     }
 
     private static (IExportStrategy strategy, string extension) GetStrategyAndExtension(string format)
@@ -51,8 +51,10 @@ public sealed class ExportReportAction(
         {
             "CSV" => (new CsvExportStrategy(), ".csv"),
             "TXT" => (new TxtExportStrategy(), ".txt"),
+            "PDF" => (new PdfExportStrategy(), ".pdf"),
+            "DOCX" => (new DocxExportStrategy(), ".docx"),
 
-            _ => throw new ArgumentException(Constants.Errors.InvalidFormat)
+            _ => throw new ArgumentException("Invalid format")
         };
     }
 

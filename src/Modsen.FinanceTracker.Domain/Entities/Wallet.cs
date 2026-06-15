@@ -1,21 +1,21 @@
-﻿using Modsen.FinanceTracker.Domain.Interfaces;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 
 public sealed class Wallet : IEntity
 {
     private const int CurrencyMaxLength = 3;
+
     [JsonInclude]
     [JsonPropertyName("Transactions")]
-    private readonly List<Transaction> _transactions = [];
+    private List<Transaction> _transactions { get; set; } = [];
 
     public Guid Id { get; init; }
 
     [JsonInclude]
     public string Name { get; private set; } = string.Empty;
 
-    [JsonInclude]
     public decimal Balance => CalculateBalance(_transactions);
 
     [JsonInclude]
@@ -90,10 +90,8 @@ public sealed class Wallet : IEntity
         return updateResult;
     }
 
-    private bool ImpossibleToRemove(Transaction transaction)
-    {
-        return transaction is IncomeTransaction && (Balance - transaction.Amount < 0);
-    }
+    private bool ImpossibleToRemove(Transaction transaction) =>
+        transaction is IncomeTransaction && (Balance - transaction.Amount < 0);
 
     private static decimal CalculateBalance(List<Transaction> transactions)
     {
@@ -101,8 +99,6 @@ public sealed class Wallet : IEntity
         transactions.OfType<ExpenseTransaction>().Sum(x => x.Amount);
     }
 
-    private bool IsExpensValid(Transaction transaction)
-    {
-        return transaction is ExpenseTransaction && Balance - transaction.Amount < 0;
-    }
+    private bool IsExpensValid(Transaction transaction) =>
+        transaction is ExpenseTransaction && Balance - transaction.Amount < 0;
 }
