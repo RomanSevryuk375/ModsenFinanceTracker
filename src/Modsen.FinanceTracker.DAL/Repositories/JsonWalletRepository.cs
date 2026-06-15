@@ -4,22 +4,20 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
-public sealed class JsonTransactionRepository(JsonDbContext context)
-    : BaseRepository<Transaction>(context.Transactions), ITransactionRepository
+public sealed class JsonWalletRepository(JsonDbContext context)
+    : BaseRepository<Wallet>(context.Wallets), IWalletRepository
 {
     public override async Task AddAsync(
-        Transaction entity, CancellationToken cancellationToken = default)
+        Wallet entity, CancellationToken cancellationToken = default)
     {
         await base.AddAsync(entity, cancellationToken);
-
         await context.SaveChangesAsync(cancellationToken);
     }
 
     public override async Task UpdateAsync(
-        Transaction entity, CancellationToken cancellationToken = default)
+        Wallet entity, CancellationToken cancellationToken = default)
     {
         await base.UpdateAsync(entity, cancellationToken);
-
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -27,7 +25,6 @@ public sealed class JsonTransactionRepository(JsonDbContext context)
         Guid id, CancellationToken cancellationToken = default)
     {
         await base.DeleteAsync(id, cancellationToken);
-
         await context.SaveChangesAsync(cancellationToken);
     }
 }

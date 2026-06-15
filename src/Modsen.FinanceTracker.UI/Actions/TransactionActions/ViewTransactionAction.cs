@@ -1,24 +1,30 @@
 ﻿using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.UI.Helpers;
 using Modsen.FinanceTracker.UI.Interfaces;
 using Modsen.FinanceTracker.UI.Models;
 using Spectre.Console;
 
-namespace Modsen.FinanceTracker.UI.Actions;
+namespace Modsen.FinanceTracker.UI.Actions.TransactionActions;
 
 public sealed class ViewTransactionAction(
     IFinanceService financeService,
-    ICategoryService categoryService,
-    ITransactionListView listView) : IMenuAction
+    IWalletService walletService,
+    ITransactionListView listView) : ITransactionMenuAction
 {
-    public string Name => Constants.MainMenu.ActionView;
+    public string Name => Constants.MainMenu.ViewTransaction;
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var searchTerm = PromptSearchTerm();
-        var (from, to) = PromptDateRange();
+        Wallet? wallet = await UIHelper.PromptWalletAsync(walletService, cancellationToken);
+        if (wallet is null)
+        {
+            return;
+        }
 
+        string searchTerm = PromptSearchTerm();
+        (DateTime? from, DateTime? to) = PromptDateRange();
         var filter = new TransactionFilterDto
         {
             SearchTerm = searchTerm,
@@ -31,54 +37,50 @@ public sealed class ViewTransactionAction(
             return;
         }
 
-        var transactions = (await financeService.GetFilteredTransactionsAsync(
-            filter, cancellationToken)).ToList();
+        IReadOnlyList<Transaction> transactions = await UIHelper.FetchTransactionsAsync(
+            wallet.Id, filter, financeService, cancellationToken);
         if (transactions.Count == 0)
         {
-            AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No transactions found.[/]");
-            return;
+            return; 
         }
 
-        var categories = (await categoryService.GetAllCategoriesAsync(cancellationToken)).ToList();
-
-        var rows = PrepareRowModels(transactions, categories);
+        IEnumerable<TransactionRowModel> rows = PrepareRowModels(transactions);
         listView.Render(rows);
     }
 
     private static string PromptSearchTerm()
     {
-        return AnsiConsole.Confirm("Do you want to search by description?")
-            ? AnsiConsole.Ask<string>("Enter search term:")
+        return AnsiConsole.Confirm(Constants.Prompts.SearchConfirmation)
+            ? AnsiConsole.Ask<string>(Constants.Prompts.SearchTerm)
             : string.Empty;
     }
 
     private static (DateTime? from, DateTime? to) PromptDateRange()
     {
         DateTime? from = AnsiConsole.Prompt(
-            new TextPrompt<DateTime>("Start date:")
+            new TextPrompt<DateTime>(Constants.Prompts.StartDate)
                 .DefaultValue(DateTime.Now.AddMonths(-1))
-                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]"));
+                .ValidationErrorMessage(Constants.Errors.InvalidFormat));
 
         DateTime? to = AnsiConsole.Prompt(
-            new TextPrompt<DateTime>("End date:")
+            new TextPrompt<DateTime>(Constants.Prompts.EndDate)
                 .DefaultValue(DateTime.Now)
-                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]")
+                .ValidationErrorMessage(Constants.Errors.InvalidFormat)
                 .Validate(date =>
                     date >= from
                         ? ValidationResult.Success()
-                        : ValidationResult.Error("End date must be after start date")));
+                        : ValidationResult.Error(Constants.Errors.EndInFuture)));
 
         return (from, to);
     }
 
     private static IEnumerable<TransactionRowModel> PrepareRowModels(
-        List<Transaction> transactions, 
-        List<Category> categories)
+        IReadOnlyList<Transaction> transactions)
     {
         return transactions.Select(t => new TransactionRowModel(
-            t.Id.ToString()[..8],
+            t.Id.ToString()[..Constants.UI.GuidShortLength],
             t.Date.ToShortDateString(),
-            categories.FirstOrDefault(c => c.Id == t.CategoryId)?.Name ?? "N/A",
+            t.Category?.Name ?? "N/A",
             t.Description,
             FormatAmount(t)
         ));
@@ -87,13 +89,12 @@ public sealed class ViewTransactionAction(
 
     private static string FormatAmount(Transaction t)
     {
-        var color = t is IncomeTransaction
-            ? $"{Constants.Colors.Success}"
-            : $"{Constants.Colors.Error}";
+        (string? color, string? sign) = t switch
+        {
+            IncomeTransaction => (Constants.Colors.Success, "+"),
 
-        var sign = t is IncomeTransaction
-            ? "+"
-            : "-";
+            _ => (Constants.Colors.Error, "-")
+        };
 
         return $"[{color}]{sign}{t.Amount:N2}[/]";
     }

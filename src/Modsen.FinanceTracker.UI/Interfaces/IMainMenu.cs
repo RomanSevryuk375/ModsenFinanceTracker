@@ -2,5 +2,5 @@
 
 public interface IMainMenu
 {
-    string ShowAndGetChoice(IEnumerable<string> choices);
+    public string ShowAndGetChoice(IEnumerable<string> choices);
 }

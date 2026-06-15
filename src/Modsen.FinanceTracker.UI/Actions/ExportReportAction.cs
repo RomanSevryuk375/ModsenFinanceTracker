@@ -1,38 +1,48 @@
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.BLL.Strategies;
+using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.UI.Helpers;
 using Modsen.FinanceTracker.UI.Interfaces;
 using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
-public sealed class ExportReportAction(IReportService reportService) : IMenuAction
+public sealed class ExportReportAction(
+    IReportService reportService,
+    IWalletService walletService) : IMenuAction
 {
-    public string Name => $"{Constants.MainMenu.ActionExportReport}";
+    private const string DateFormat = "yyyy-MM-dd_HH-mm";
+
+    public string Name => Constants.MainMenu.ActionExportReport;
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var format = PromptFormat();
+        Wallet? wallet = await UIHelper.PromptWalletAsync(walletService, cancellationToken);
+        if (wallet is null)
+        {
+            return;
+        }
+
+        string format = PromptFormat();
+        (IExportStrategy strategy, string extension) = GetStrategyAndExtension(format);
+        string fullPath = GenerateReportPath(format, extension);
 
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        var (strategy, extension) = GetStrategyAndExtension(format);
+        await reportService.ExportAsync(wallet.Id, strategy, fullPath, cancellationToken);
 
-        var fullPath = GenerateReportPath(format, extension);
-
-        await reportService.ExportAsync(strategy, fullPath, cancellationToken);
-
-        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]Report exported to {fullPath}[/]");
+        AnsiConsole.MarkupLine($"[{Constants.Colors.Success}]{Constants.Success.ExportReport} {fullPath}[/]");
     }
 
     private static string PromptFormat()
     {
         return AnsiConsole.Prompt(
             new SelectionPrompt<string>()
-                .Title("Select export format:")
-                .AddChoices("CSV", "TXT"));
+                .Title(Constants.Prompts.ExportFormat)
+                .AddChoices("CSV", "TXT", "PDF", "DOCX"));
     }
 
     private static (IExportStrategy strategy, string extension) GetStrategyAndExtension(string format)
@@ -41,6 +51,8 @@ public sealed class ExportReportAction(IReportService reportService) : IMenuActi
         {
             "CSV" => (new CsvExportStrategy(), ".csv"),
             "TXT" => (new TxtExportStrategy(), ".txt"),
+            "PDF" => (new PdfExportStrategy(), ".pdf"),
+            "DOCX" => (new DocxExportStrategy(), ".docx"),
 
             _ => throw new ArgumentException("Invalid format")
         };
@@ -48,8 +60,8 @@ public sealed class ExportReportAction(IReportService reportService) : IMenuActi
 
     private static string GenerateReportPath(string format, string extension)
     {
-        var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
-        var fileName = $"FinanceReport_{timestamp}_{format}{extension}";
+        string timestamp = DateTime.Now.ToString(DateFormat);
+        string fileName = $"FinanceReport_{timestamp}_{format}{extension}";
 
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
     }

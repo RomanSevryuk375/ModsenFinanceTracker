@@ -3,7 +3,7 @@
 namespace Modsen.FinanceTracker.Domain.Interfaces;
 
 public interface IDataContext
-{ 
-    List<Transaction> Transactions { get; }
-    List<Category> Categories { get; }
+{
+    public List<Wallet> Wallets { get; }
+    public List<Category> Categories { get; }
 }

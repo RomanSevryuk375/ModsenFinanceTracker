@@ -7,18 +7,48 @@ namespace Modsen.FinanceTracker.Domain.Entities;
 [JsonDerivedType(typeof(ExpenseTransaction), typeDiscriminator: "expense")]
 public abstract class Transaction : IEntity
 {
-    public Guid Id { get; set; }
-    public decimal Amount { get; set; }
-    public string Description { get; set; }
-    public DateTime Date { get; set; }
-    public Guid CategoryId { get; set; }
+    public Guid Id { get; init; }
 
-    protected Transaction(Guid id, decimal amount, string description, DateTime date, Guid categoryId)
+    [JsonInclude]
+    public decimal Amount { get; private set; }
+
+    [JsonInclude]
+    public string Description { get; private set; }
+
+    [JsonInclude]
+    public DateTime Date { get; private set; }
+
+    [JsonInclude]
+    public Category Category { get; private set; }
+
+    protected Transaction(Guid id, decimal amount, string description, DateTime date, Category category)
     {
+        if (amount <= 0)
+        {
+            throw new ArgumentException("Amount must be strictly positive");
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new ArgumentException("Description is required");
+        }
+
         Id = id;
         Amount = amount;
         Description = description;
         Date = date;
-        CategoryId = categoryId;
+        Category = category;
+    }
+
+    public Result UpdateDetails(decimal newAmount, string newDescription)
+    {
+        if (newAmount <= 0)
+        {
+            return Result.Fail("Amount must be positive");
+        }
+
+        Amount = newAmount;
+        Description = newDescription;
+        return Result.Success();
     }
 }

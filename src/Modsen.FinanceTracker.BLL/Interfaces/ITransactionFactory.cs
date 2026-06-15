@@ -5,9 +5,9 @@ namespace Modsen.FinanceTracker.BLL.Interfaces;
 
 public interface ITransactionFactory
 {
-    Transaction CreateTransaction(
+    public Transaction CreateTransaction(
         TransactionType type,
         decimal amount,
         string description,
-        Guid categoryId);
+        Category category);
 }

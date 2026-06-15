@@ -1,18 +1,26 @@
-﻿using Modsen.FinanceTracker.BLL.Interfaces;
+using Modsen.FinanceTracker.BLL.Interfaces;
+using Modsen.FinanceTracker.Infrastructure.Configuration;
+using Modsen.FinanceTracker.Infrastructure.Security;
 using Modsen.FinanceTracker.UI.Interfaces;
 using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI;
 
 public sealed class App(
-    IMainMenu mainMenu, 
-    IEnumerable<IMenuAction> actions, 
-    IFinanceService financeService) : IApp
+    IMainMenu mainMenu,
+    IEnumerable<IMenuAction> actions,
+    IFinanceService financeService,
+    ISchedulerService schedulerService) : IApp
 {
     private bool _isRunning = true;
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
+        if (!AuthenticateUser())
+        {
+            return;
+        }
+
         financeService.OnCategoryLimitExceeded += (sender, args) =>
         {
             AnsiConsole.MarkupLine(
@@ -20,27 +28,65 @@ public sealed class App(
                 $"by {args.ExcessAmount:N2}![/]");
         };
 
+        schedulerService.OnTransactionWrittenOff += (sender, args) =>
+        {
+            AnsiConsole.MarkupLine(
+                $"[{Constants.Colors.Info}]AUTO-PAYMENT:[/] {args.Amount:N2} for '{args.Description}' " +
+                $"deducted from '{args.WalletName}'. Next due: {args.NextExecutionDate:d}");
+        };
+        await schedulerService.CheckAndProcessRecurringTransactionsAsync(cancellationToken);
+
+        Console.WriteLine("Press any key to continue to Main Menu...");
+        Console.ReadKey(true);
+
         while (_isRunning && !cancellationToken.IsCancellationRequested)
         {
-            var availableChoices = actions.Select(a => a.Name);
-            var choice = mainMenu.ShowAndGetChoice(availableChoices);
+            IEnumerable<string> availableChoices = actions.Select(a => a.Name);
+            string choice = mainMenu.ShowAndGetChoice(availableChoices);
 
             if (cancellationToken.IsCancellationRequested)
             {
                 break;
             }
 
-            await HandleChoice(choice, cancellationToken);
+            await HandleChoiceAsync(choice, cancellationToken);
         }
     }
 
-    private async Task HandleChoice(string choice, CancellationToken cancellationToken)
+    private async Task HandleChoiceAsync(string choice, CancellationToken cancellationToken)
     {
-        var action = actions.FirstOrDefault(a => a.Name == choice);
+        IMenuAction? action = actions.FirstOrDefault(a => a.Name == choice);
 
-        action?.ExecuteAsync(cancellationToken);
+        if (action is not null)
+        {
+            await action.ExecuteAsync(cancellationToken);
+        }
 
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey(true);
+    }
+
+    private static bool AuthenticateUser()
+    {
+        AppConfiguration config = AppConfiguration.Instance;
+
+        if (!config.IsPasswordEnabled)
+        {
+            return true;
+        }
+
+        string password = AnsiConsole.Prompt(
+            new TextPrompt<string>(Constants.Prompts.EnterPassword)
+                .Secret());
+
+        string hashedInput = PasswordHasher.ComputeSha256Hash(password);
+
+        if (hashedInput.Equals(config.HashedPassword, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        AnsiConsole.MarkupLine(Constants.Errors.InvalidPassword);
+        return false;
     }
 }

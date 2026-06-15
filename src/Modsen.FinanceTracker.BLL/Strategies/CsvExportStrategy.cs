@@ -1,4 +1,5 @@
 using System.Text;
+using Modsen.FinanceTracker.BLL.Constants;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Domain.Entities;
 
@@ -7,19 +8,22 @@ namespace Modsen.FinanceTracker.BLL.Strategies;
 public sealed class CsvExportStrategy : IExportStrategy
 {
     public async Task ExportAsync(
-        IEnumerable<Transaction> transactions,
-        string filePath,
+        IEnumerable<Transaction> transactions, 
+        string filePath, 
         CancellationToken cancellationToken)
     {
-        const string tableHeader = "Date,Type,Amount,Description";
-
         var csv = new StringBuilder();
-        csv.AppendLine($"{tableHeader}");
+        csv.AppendLine(ReportConstants.Headers.CsvHeader);
 
-        foreach (var t in transactions)
+        foreach (Transaction t in transactions)
         {
-            var type = t is IncomeTransaction ? "Income" : "Expense";
-            csv.AppendLine($"{t.Date:d},{type},{t.Amount},\"{t.Description}\"");
+            string type = t is IncomeTransaction 
+                ? ReportConstants.Types.Income 
+                : ReportConstants.Types.Expense;
+            string categoryName = t.Category?.Name 
+                ?? ReportConstants.NotAvailable;
+
+            csv.AppendLine($"{t.Date:d},{type},{categoryName},\"{t.Description}\",{t.Amount}");
         }
 
         await File.WriteAllTextAsync(filePath, csv.ToString(), cancellationToken);

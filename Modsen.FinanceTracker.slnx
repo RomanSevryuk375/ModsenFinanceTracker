@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Modsen.FinanceTracker.BLL/Modsen.FinanceTracker.BLL.csproj" />
     <Project Path="src/Modsen.FinanceTracker.DAL/Modsen.FinanceTracker.DAL.csproj" />

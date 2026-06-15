@@ -5,10 +5,10 @@ namespace Modsen.FinanceTracker.BLL.Interfaces;
 
 public interface ICategoryService
 {
-    Task<IEnumerable<Category>> GetAllCategoriesAsync(
+    public Task<IEnumerable<Category>> GetAllCategoriesAsync(
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Category>> GetCategoriesByTypeAsync(
+    public Task<IEnumerable<Category>> GetCategoriesByTypeAsync(
         TransactionType type, 
         CancellationToken cancellationToken = default);
 }

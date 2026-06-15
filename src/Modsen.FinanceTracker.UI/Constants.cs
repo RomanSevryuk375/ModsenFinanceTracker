@@ -1,4 +1,4 @@
-﻿namespace Modsen.FinanceTracker.UI;
+namespace Modsen.FinanceTracker.UI;
 
 public static class Constants
 {
@@ -8,23 +8,67 @@ public static class Constants
         public const string SelectOptionPrompt = "Please select an [green]option[/]:";
         public const int MainPageSize = 10;
 
-        public const string ActionAdd = "Add Transaction";
-        public const string ActionUpdate = "Update Transaction";
-        public const string ActionView = "View History";
-        public const string ActionDelete = "Delete Transaction";
         public const string ActionBalance = "Check Balance";
         public const string ActionExit = "Exit";
         public const string ActionExportReport = "Export Reports";
+        public const string ActionAnalytics = "Analytics";
+
+        public const string ManageTransactions = "Manage Transactions";
+        public const string AddTransaction = "Add Transaction";
+        public const string UpdateTransaction = "Update Transaction";
+        public const string ViewTransaction = "View History";
+        public const string DeleteTransaction = "Delete Transaction";
+
+        public const string ManageWallets = "Manage Wallets";
+        public const string CreateWallet = "Create Wallet";
+        public const string ViewWallets = "View Wallets";
+        public const string DeleteWallet = "Delete Wallet";
+
+        public const string ManageTemplates = "Manage Subscriptions";
+        public const string AddTemplate = "Add Subscription";
+        public const string ViewTemplates = "View Subscriptions";
+        public const string DeleteTemplate = "Delete Subscription";
+
+        public const string BackToMainMenu = "Back to Main Menu";
     }
 
     public static class Tables
     {
-        public const string TransactionsTableTitle = "List of Transactions";
-        public const string TransactionsTableId = "Id";
-        public const string TransactionsDate = "Date";
-        public const string TransactionsAmount = "Amount";
-        public const string TransactionDescription = "Description";
-        public const string TransactionCategory = "Category";
+        public const string Title = "List of Transactions";
+        public const string WalletsTitle = "List of Wallets";
+        public const string AnalyticsTitle = "Analytics of Transactions";
+
+        public const string Id = "Id";
+        public const string Date = "Date";
+        public const string Amount = "Amount";
+        public const string Description = "Description";
+        public const string Category = "Category";
+        public const string Percent = "%";
+
+        public const string WalletName = "Name";
+        public const string WalletCurrency = "Currency";
+        public const string WalletBalance = "Current Balance";
+
+        public const int PageSize = 5;
+        public const string NavigationTitle = "Navigation: ";
+        public const string NextPageButton = "Next Page";
+        public const string PrevPageButton = "Previous Page";
+        public const string ExitButton = "Exit to Menu";
+
+        public const string TemplatesTitle = "Active Subscriptions (Templates)";
+        public const string TemplateName = "Name";
+        public const string Period = "Period";
+        public const string NextDate = "Next Date";
+    }
+
+    public static class BreakdownChart
+    {
+        public const string Name = "Expenses Breakdown";
+        public const int Width = 60;
+        public const int PaddingTop = 1;
+        public const int PaddingLeft = 2;
+        public const int PaddingRight = 2;
+        public const int PaddingBottom = 1;
     }
 
     public static class Colors
@@ -45,5 +89,157 @@ public static class Constants
     {
         public const int PanelPaddingHorizontal = 2;
         public const int PanelPaddingVertical = 1;
+    }
+
+    public static class Success
+    {
+        public const string AddTransaction = "Transaction added successfully";
+        public const string DeleteTransaction = "Transaction deleted successfully";
+        public const string UpdateTransaction = "Transaction updated successfully";
+
+        public const string CreateWallet = "Wallet created successfully";
+        public const string DeleteWallet = "Wallet deleted successfully";
+
+        public const string ExportReport = "Report exported successfully to:";
+
+        public const string AddTemplate = "Subscription template added successfully";
+        public const string DeleteTemplate = "Subscription template deleted successfully";
+    }
+
+    public static class Prompts
+    {
+        public const string TransactionManagementTitle = "Transaction Management: ";
+        public const string WalletManagementTitle = "Wallet Management: ";
+        public const string WalletSelectionTitle = $"Select a [{Colors.Success}]wallet[/]:";
+
+        public const string TransactionConfirmation = "Are you sure you want to delete this transaction?";
+        public const string SearchConfirmation = "Do you want to search by description?";
+
+        public const string Amount = "Enter amount:";
+        public static string NewAmount(decimal targetAmount) => $"New amount (current: {targetAmount}):";
+        public const string Category = "Select category:";
+        public const string Description = "Enter description:";
+        public static string NewDescription(string targetDescription) => $"New description (current: {targetDescription}):";
+        public const string DeleteTransaction = "Choose transaction to delete:";
+        public const string EditTransaction = "Choose transaction to edit:";
+        public const string TransactionType = $"Is this an [{Colors.Info}]Income[/]?";
+        public const string SearchTerm = "Enter search term:";
+        public const string StartDate = "Start date:";
+        public const string EndDate = "End date:";
+        public const string ExportFormat = "Select export format:";
+
+        public const string WalletName = "Enter wallet name (e.g., Main, Savings):";
+        public const string WalletCurrency = "Enter base currency (3 letters, e.g., USD, EUR):";
+        public const string DeleteWalletSelection = "Select a wallet to delete:";
+
+        public static string DeleteWalletConfirmation(string walletName) =>
+            $"Are you sure you want to delete [{Colors.Error}]{walletName}[/]? All transactions inside will be lost!";
+
+        public static string WalletDisplay(string name, string currency, decimal balance) =>
+            $"{name} ({currency}) - Balance: {balance:N2}";
+
+        public const string EnterPassword = "Enter application password:";
+
+        public const string TemplateManagementTitle = "Subscription Management: ";
+        public const string TemplateName = "Enter subscription name (e.g., Netflix, Rent):";
+        public const string TemplatePeriod = "Select charging period:";
+        public const string NextExecutionDate = "Enter the date of the FIRST charge:";
+        public const string DeleteTemplate = "Choose subscription to delete:";
+        public const string DeleteTemplateConfirmation = "Are you sure you want to delete this subscription?";
+    }
+
+    public static class Info
+    {
+        public const string NoWalletsToDelete = $"[{Colors.Info}]No wallets found to delete.[/]";
+        public const string NoWalletsToView = $"[{Colors.Info}]No wallets found. Please create one first.[/]";
+        public const string DeletionCancelled = $"[{Colors.Info}]Deletion cancelled.[/]";
+    }
+
+    public static class Errors
+    {
+        public const string NegativeAmount = $"[{Colors.Error}]Amount must be positive.[/]";
+        public const string BalanceBecomeNegative = $"[{Colors.Error}]Insufficient funds! Current balance will become negative[/]";
+        public const string EndInFuture = "End date must be after start date";
+
+        public const string CategoriesNotFound = $"[{Colors.Error}]No categories found.[/]";
+        public const string TransactionNotFound = $"[{Colors.Info}]No transactions found.[/]";
+        public const string WalletNotFound = $"[{Colors.Info}]No wallets found. Please create a wallet first.[/]";
+
+        public const string InvalidFormat = $"[{Colors.Error}]Invalid format[/]";
+        public const string CurrencyLength = $"[{Colors.Error}]Currency must be exactly 3 characters.[/]";
+
+        public const string InvalidPassword = $"[{Colors.Error}]Invalid password! Access denied.[/]";
+
+        public const string TemplateNotFound = $"[{Colors.Info}]No active subscriptions found.[/]";
+    }
+
+    public static class UI
+    {
+        public const int GuidShortLength = 8;
+        public const int CurrencyLength = 3;
+    }
+
+    public static class ReportConstants
+    {
+        public const string ReportTitle = "Finance Tracker Report";
+        public const string NotAvailable = "N/A";
+
+        public static class Headers
+        {
+            public const string Date = "Date";
+            public const string Type = "Type";
+            public const string Category = "Category";
+            public const string Description = "Description";
+            public const string Amount = "Amount";
+
+            // Для удобства в CSV
+            public const string CsvHeader = "Date,Type,Category,Description,Amount";
+        }
+
+        public static class Types
+        {
+            public const string Income = "Income";
+            public const string Expense = "Expense";
+
+            public const string IncomeSign = "+";
+            public const string ExpenseSign = "-";
+
+            public const string TxtIncome = "[+]";
+            public const string TxtExpense = "[-]";
+        }
+
+        public static class Pdf
+        {
+            public const float MarginCentimetres = 2f;
+            public const int DefaultFontSize = 11;
+            public const int HeaderFontSize = 20;
+
+            public const float ContentPaddingVerticalCentimetres = 1f;
+            public const float ContentSpacing = 20f;
+
+            public const float ColDateWidth = 80f;
+            public const float ColTypeWidth = 60f;
+            public const float ColCategoryWidth = 100f;
+            public const float ColAmountWidth = 80f;
+
+            public const float CellPadding = 5f;
+            public const float BorderBottomThickness = 1f;
+
+            public const string PageText = "Page ";
+            public const string OfText = " of ";
+        }
+
+        public static class Docx
+        {
+            public const int HeaderFontSize = 18;
+            public const double HeaderSpacingAfter = 15d;
+        }
+
+        public static class Txt
+        {
+            public const int SeparatorLength = 80;
+            public const char SeparatorChar = '-';
+            public const string ColumnSeparator = " | ";
+        }
     }
 }

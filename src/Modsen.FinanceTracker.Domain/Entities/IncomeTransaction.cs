@@ -5,6 +5,6 @@ public sealed class IncomeTransaction(
     decimal amount, 
     string description, 
     DateTime date, 
-    Guid categoryId) : Transaction(id, amount, description, date, categoryId) 
+    Category category) : Transaction(id, amount, description, date, category) 
 {
 }

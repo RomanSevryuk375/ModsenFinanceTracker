@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Modsen.FinanceTracker.Domain.Entities;
+﻿using Modsen.FinanceTracker.Domain.Entities;
 
 namespace Modsen.FinanceTracker.BLL.DTOs;
 
@@ -8,11 +7,12 @@ public sealed record TransactionFilterDto
     public string? SearchTerm { get; set; }
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
-    
-    public Expression<Func<Transaction, bool>> ToExpression()
+
+    public Func<Transaction, bool> ToFilter()
     {
-        return t => 
-            (string.IsNullOrWhiteSpace(SearchTerm) || t.Description.Contains(SearchTerm)) &&
+        return t =>
+            (string.IsNullOrWhiteSpace(SearchTerm) ||
+             t.Description.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)) &&
             (!From.HasValue || t.Date >= From.Value) &&
             (!To.HasValue || t.Date <= To.Value);
     }

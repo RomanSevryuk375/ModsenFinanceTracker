@@ -2,7 +2,8 @@
 
 public interface IReportService
 {
-    Task ExportAsync(
+    public Task ExportAsync(
+        Guid walletId,
         IExportStrategy strategy,
         string filePath,
         CancellationToken cancellationToken);
