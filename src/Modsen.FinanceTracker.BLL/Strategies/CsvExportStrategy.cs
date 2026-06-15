@@ -16,9 +16,9 @@ public sealed class CsvExportStrategy : IExportStrategy
         var csv = new StringBuilder();
         csv.AppendLine($"{tableHeader}");
 
-        foreach (var t in transactions)
+        foreach (Transaction t in transactions)
         {
-            var type = t is IncomeTransaction ? "Income" : "Expense";
+            string type = t is IncomeTransaction ? "Income" : "Expense";
             csv.AppendLine($"{t.Date:d},{type},{t.Amount},\"{t.Description}\"");
         }
 

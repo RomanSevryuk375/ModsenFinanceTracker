@@ -14,9 +14,9 @@ public sealed class TxtExportStrategy : IExportStrategy
         var txt = new StringBuilder();
         txt.AppendLine(new string('-', 30));
 
-        foreach (var t in transactions)
+        foreach (Transaction t in transactions)
         {
-            var type = t is IncomeTransaction ? "[+]" : "[-]";
+            string type = t is IncomeTransaction ? "[+]" : "[-]";
             txt.AppendLine($"{t.Date:d} | {type} | {t.Amount:N2} | {t.Description}");
         }
 

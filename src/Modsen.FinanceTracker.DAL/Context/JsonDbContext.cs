@@ -10,7 +10,7 @@ public sealed class JsonDbContext : IDataContext
     private readonly string _filePath;
     private readonly JsonSerializerOptions _options;
 
-    public List<Transaction> Transactions { get; private set; } = [];
+    public List<Wallet> Wallets { get; private set; } = [];
     public List<Category> Categories { get; private set; } = [];
 
     public JsonDbContext(string filePath)
@@ -30,12 +30,12 @@ public sealed class JsonDbContext : IDataContext
             return;
         }
 
-        var json = await File.ReadAllTextAsync(_filePath, cancellationToken);
-        var data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
+        string json = await File.ReadAllTextAsync(_filePath, cancellationToken);
+        JsonDataModel? data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
 
         if (data is not null)
         {
-            Transactions = data.Transactions;
+            Wallets = data.Wallets;
             Categories = data.Categories;
         }
     }
@@ -44,10 +44,10 @@ public sealed class JsonDbContext : IDataContext
     {
         var data = new JsonDataModel
         {
-            Transactions = Transactions, 
+            Wallets = Wallets, 
             Categories = Categories
         };
-        var json = JsonSerializer.Serialize(data, _options);
+        string json = JsonSerializer.Serialize(data, _options);
 
         await File.WriteAllTextAsync(_filePath, json, cancellationToken);
     }

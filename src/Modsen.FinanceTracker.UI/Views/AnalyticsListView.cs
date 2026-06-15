@@ -10,16 +10,16 @@ public sealed class AnalyticsListView : IAnalyticsListView
     {
         var rowList = rows.ToList();
 
-        var table = new Table()
+        Table table = new Table()
             .Border(TableBorder.Rounded)
             .Title($"[{Constants.Colors.Primary}]{Constants.Tables.AnalyticsTitle}[/]")
             .LeftAligned();
 
-        table.AddColumn($"{Constants.Tables.Category}");
-        table.AddColumn($"{Constants.Tables.Amount}");
-        table.AddColumn($"{Constants.Tables.Percent}");
+        table.AddColumn(Constants.Tables.Category);
+        table.AddColumn(Constants.Tables.Amount);
+        table.AddColumn(Constants.Tables.Percent);
 
-        foreach (var row in rowList)
+        foreach (AnalyticsRowModel? row in rowList)
         {
             table.AddRow(row.CategoryName, row.FormattedAmount, row.FormattedPercent);
         }
@@ -27,11 +27,11 @@ public sealed class AnalyticsListView : IAnalyticsListView
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();
 
-        var chart = new BreakdownChart()
+        BreakdownChart chart = new BreakdownChart()
             .FullSize()
             .Width(Constants.BreakdownChart.Width);
 
-        var colors = new[] 
+        Color[] colors = new[] 
         { 
             Color.Red, 
             Color.Blue, 
@@ -41,9 +41,9 @@ public sealed class AnalyticsListView : IAnalyticsListView
             Color.Purple 
         };
 
-        var colorIndex = 0;
+        int colorIndex = 0;
 
-        foreach (var row in rowList)
+        foreach (AnalyticsRowModel? row in rowList)
         {
             chart.AddItem(row.CategoryName, row.RawAmount, colors[colorIndex % colors.Length]);
             colorIndex++;

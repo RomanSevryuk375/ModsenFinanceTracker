@@ -2,4 +2,4 @@
 
 namespace Modsen.FinanceTracker.Domain.Interfaces;
 
-public interface ITransactionRepository : IRepository<Transaction> { }
+public interface IWalletRepository : IRepository<Wallet> { }

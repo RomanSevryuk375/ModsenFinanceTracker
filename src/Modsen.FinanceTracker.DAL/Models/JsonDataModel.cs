@@ -4,6 +4,6 @@ namespace Modsen.FinanceTracker.DAL.Models;
 
 public sealed record JsonDataModel
 {
-    public List<Transaction> Transactions { get; set; } = [];
+    public List<Wallet> Wallets { get; set; } = [];
     public List<Category> Categories { get; set; } = [];
 }

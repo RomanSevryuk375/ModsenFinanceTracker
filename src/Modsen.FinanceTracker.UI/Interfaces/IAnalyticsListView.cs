@@ -4,5 +4,5 @@ namespace Modsen.FinanceTracker.UI.Interfaces;
 
 public interface IAnalyticsListView
 {
-    void Render(IEnumerable<AnalyticsRowModel> rows);
+    public void Render(IEnumerable<AnalyticsRowModel> rows);
 }

@@ -22,21 +22,21 @@ public sealed class App(
 
         while (_isRunning && !cancellationToken.IsCancellationRequested)
         {
-            var availableChoices = actions.Select(a => a.Name);
-            var choice = mainMenu.ShowAndGetChoice(availableChoices);
+            IEnumerable<string> availableChoices = actions.Select(a => a.Name);
+            string choice = mainMenu.ShowAndGetChoice(availableChoices);
 
             if (cancellationToken.IsCancellationRequested)
             {
                 break;
             }
 
-            await HandleChoice(choice, cancellationToken);
+            await HandleChoiceAsync(choice, cancellationToken);
         }
     }
 
-    private async Task HandleChoice(string choice, CancellationToken cancellationToken)
+    private async Task HandleChoiceAsync(string choice, CancellationToken cancellationToken)
     {
-        var action = actions.FirstOrDefault(a => a.Name == choice);
+        IMenuAction? action = actions.FirstOrDefault(a => a.Name == choice);
 
         action?.ExecuteAsync(cancellationToken);
 

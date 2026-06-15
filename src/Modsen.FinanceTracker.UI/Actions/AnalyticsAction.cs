@@ -1,6 +1,8 @@
 ﻿using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.BLL.Interfaces;
+using Modsen.FinanceTracker.Domain;
 using Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.UI.Helpers;
 using Modsen.FinanceTracker.UI.Interfaces;
 using Modsen.FinanceTracker.UI.Models;
 using Spectre.Console;
@@ -9,14 +11,20 @@ namespace Modsen.FinanceTracker.UI.Actions;
 
 public sealed class AnalyticsAction(
     IFinanceService financeService,
-    ICategoryService categoryService,
+    IWalletService walletService,
     IAnalyticsListView listView) : IMenuAction
 {
     public string Name => Constants.MainMenu.ActionAnalytics;
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var (from, to) = PromptDateRange();
+        Wallet? wallet = await UIHelper.PromptWalletAsync(walletService, cancellationToken);
+        if (wallet is null)
+        {
+            return;
+        }
+
+        (DateTime? from, DateTime? to) = PromptDateRange();
         var filter = new TransactionFilterDto
         {
             SearchTerm = null,
@@ -29,52 +37,56 @@ public sealed class AnalyticsAction(
             return;
         }
 
-        var expensesTransactions = (await financeService.GetFilteredTransactionsAsync(
-            filter, cancellationToken)).OfType<ExpenseTransaction>().ToList();
+        Result<IReadOnlyList<Transaction>> transactionsResult = await financeService.GetFilteredTransactionsAsync(
+            wallet.Id, filter, cancellationToken);
 
-        if (expensesTransactions.Count == 0)
+        if (transactionsResult.IsFailure)
         {
-            AnsiConsole.MarkupLine($"[{Constants.Colors.Info}]No expense transactions found for this period.[/]");
+            AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]{transactionsResult.Error}[/]");
             return;
         }
 
-        var categories = (await categoryService.GetAllCategoriesAsync(cancellationToken)).ToList();
+        var expenses = transactionsResult.Value.OfType<ExpenseTransaction>().ToList();
 
-        var rows = PrepareRowModels(expensesTransactions, categories);
+        if (expenses.Count == 0)
+        {
+            AnsiConsole.MarkupLine(Constants.Errors.TransactionNotFound);
+            return;
+        }
+
+        IEnumerable<AnalyticsRowModel> rows = PrepareRowModels(expenses);
         listView.Render(rows);
     }
 
     private static (DateTime? from, DateTime? to) PromptDateRange()
     {
         DateTime? from = AnsiConsole.Prompt(
-            new TextPrompt<DateTime>("Start date:")
+            new TextPrompt<DateTime>(Constants.Prompts.StartDate)
                 .DefaultValue(DateTime.Now.AddMonths(-1))
-                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]"));
+                .ValidationErrorMessage(Constants.Errors.InvalidFormat));
 
         DateTime? to = AnsiConsole.Prompt(
-            new TextPrompt<DateTime>("End date:")
+            new TextPrompt<DateTime>(Constants.Prompts.EndDate)
                 .DefaultValue(DateTime.Now)
-                .ValidationErrorMessage($"[{Constants.Colors.Error}]Invalid format[/]")
+                .ValidationErrorMessage(Constants.Errors.InvalidFormat)
                 .Validate(date =>
                     date >= from
                         ? ValidationResult.Success()
-                        : ValidationResult.Error("End date must be after start date")));
+                        : ValidationResult.Error(Constants.Errors.EndInFuture)));
 
         return (from, to);
     }
 
-    private static IEnumerable<AnalyticsRowModel> PrepareRowModels(
-        List<ExpenseTransaction> expenses,
-        List<Category> categories)
+    private static IEnumerable<AnalyticsRowModel> PrepareRowModels(List<ExpenseTransaction> expenses)
     {
-        var totalAmount = expenses.Sum(x => x.Amount);
+        decimal totalAmount = expenses.Sum(x => x.Amount);
 
         return expenses
-            .GroupBy(x => x.CategoryId)
+            .GroupBy(x => x.Category.Id)
             .Select(g =>
             {
-                var categoryName = categories.FirstOrDefault(c => c.Id == g.Key)?.Name ?? "N/A";
-                var groupAmount = g.Sum(x => x.Amount);
+                string categoryName = g.First().Category.Name;
+                decimal groupAmount = g.Sum(x => x.Amount);
 
                 double percent = totalAmount > 0
                     ? ((double)groupAmount / (double)totalAmount) * 100

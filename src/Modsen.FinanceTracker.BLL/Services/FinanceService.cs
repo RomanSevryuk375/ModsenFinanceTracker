@@ -1,5 +1,6 @@
 ﻿using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.BLL.Interfaces;
+using Modsen.FinanceTracker.Domain;
 using Modsen.FinanceTracker.Domain.Entities;
 using Modsen.FinanceTracker.Domain.Events;
 using Modsen.FinanceTracker.Domain.Interfaces;
@@ -7,67 +8,137 @@ using Modsen.FinanceTracker.Domain.Interfaces;
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class FinanceService(
-    ITransactionRepository repository,
-    ICategoryRepository categoryRepository,
-    IValidator<Transaction> validator) : IFinanceService
+    IWalletRepository repository,
+    IValidator<Transaction> validator,
+    IUnitOfWork unitOfWork) : IFinanceService
 {
     public event EventHandler<CategoryLimitExceededEventArgs>? OnCategoryLimitExceeded;
-    public async Task AddTransactionAsync(
+    public async Task<Result> AddTransactionAsync(
+        Guid walletId,
         Transaction transaction,
         CancellationToken cancellationToken = default)
     {
-        var (isValid, message) = validator.Validate(transaction);
-        if (!isValid)
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
         {
-            throw new ArgumentException(message);
+            return Result.Fail($"Wallet {walletId} not found.");
+        }
+        Result<Transaction> validationResult = validator.Validate(transaction);
+        if (validationResult.IsFailure)
+        {
+            return Result.Fail(validationResult.Error);
         }
 
         if (transaction is ExpenseTransaction)
         {
-            await CheckBudgetLimitAsync(transaction, cancellationToken);
+            await CheckBudgetLimitAsync(walletId, transaction, cancellationToken);
         }
 
-        await repository.AddAsync(transaction, cancellationToken);
+        Result addResult = wallet.AddTransaction(transaction);
+        if (addResult.IsFailure)
+        {
+            return Result.Fail(addResult.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 
-    public async Task DeleteTransactionAsync(
-        Guid id,
+    public async Task<Result> DeleteTransactionAsync(
+        Guid walletId,
+        Guid transactionId,
         CancellationToken cancellationToken = default)
     {
-        await repository.DeleteAsync(id, cancellationToken);
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail($"Wallet {walletId} not found.");
+        }
+
+        Transaction? transaction = wallet.Transactions.FirstOrDefault(x => x.Id == transactionId);
+        if (transaction is null)
+        {
+            return Result.Fail($"Transaction {transactionId} not found.");
+        }
+
+        Result deleteResult = wallet.RemoveTransaction(transaction);
+        if (deleteResult.IsFailure)
+        {
+            return Result.Fail(deleteResult.Error);
+        }
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 
-    public async Task UpdateTransactionAsync(
-        Transaction transaction,
+    public async Task<Result> UpdateTransactionAsync(
+        Guid walletId,
+        decimal newAmount,
+        string newDescription,
+        Guid transactionId,
         CancellationToken cancellationToken = default)
     {
-        await repository.UpdateAsync(transaction, cancellationToken);
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail($"Wallet {walletId} not found.");
+        }
+
+        Transaction? transaction = wallet.Transactions.FirstOrDefault(x => x.Id == transactionId);
+        if (transaction is null)
+        {
+            return Result.Fail($"Transaction {transactionId} not found.");
+        }
+
+        Result updateResult = wallet.UpdateTransaction(transaction, newAmount, newDescription);
+        if (updateResult.IsFailure)
+        {
+            return Result.Fail(updateResult.Error);
+        }
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 
-    public async Task<decimal> GetBalanceAsync(
+    public async Task<Result<decimal>> GetBalanceAsync(
+        Guid walletId,
         CancellationToken cancellationToken = default)
     {
-        var transactions = await repository.GetAllAsync(
-            cancellationToken: cancellationToken);
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail<decimal>($"Wallet {walletId} not found.");
+        }
 
-        return transactions.Sum(t =>
-            t is IncomeTransaction
-                ? t.Amount
-                : -t.Amount);
+        return Result.Success(wallet.Balance);
     }
 
-    public async Task<IEnumerable<Transaction>> GetFilteredTransactionsAsync(
+    public async Task<Result<IReadOnlyList<Transaction>>> GetFilteredTransactionsAsync(
+        Guid walletId,
         TransactionFilterDto filter,
         CancellationToken cancellationToken = default)
     {
-        return await repository.GetAllAsync(
-            filter.ToExpression(), cancellationToken: cancellationToken);
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail<IReadOnlyList<Transaction>>($"Wallet {walletId} not found.");
+        }
+
+        Func<Transaction, bool> isMatch = filter.ToFilter();
+
+        var filteredList = wallet.Transactions
+            .Where(isMatch)
+            .ToList();
+
+        return Result.Success<IReadOnlyList<Transaction>>(filteredList);
     }
 
-    private async Task CheckBudgetLimitAsync(Transaction transaction, CancellationToken cancellationToken)
+    private async Task CheckBudgetLimitAsync(
+        Guid walletId,
+        Transaction transaction,
+        CancellationToken cancellationToken = default)
     {
-        decimal transactionsAmount = 0m;
-
         var filter = new TransactionFilterDto
         {
             SearchTerm = null,
@@ -75,24 +146,23 @@ public sealed class FinanceService(
             To = DateTime.Now
         };
 
-        transactionsAmount = (await GetFilteredTransactionsAsync(filter, cancellationToken))
-            .ToList()
-            .Where(x => x.CategoryId == transaction.CategoryId)
-            .Sum(x => x.Amount);
-
-        var category = await categoryRepository.GetByIdAsync(transaction.CategoryId, cancellationToken);
-        if (category is null)
+        Result<IReadOnlyList<Transaction>> filterResult = await GetFilteredTransactionsAsync(walletId, filter, cancellationToken);
+        if (filterResult.IsFailure)
         {
-            throw new ArgumentException($"Category {transaction.CategoryId} not found");
+            return;
         }
 
-        if (category.BudgetLimit.HasValue &&
-            (transactionsAmount + transaction.Amount) > category.BudgetLimit.Value)
+        decimal transactionsAmount = filterResult.Value.ToList()
+            .Where(x => x.Category.Id == transaction.Category.Id)
+            .Sum(x => x.Amount);
+
+        if (transaction.Category.BudgetLimit.HasValue &&
+            (transactionsAmount + transaction.Amount) > transaction.Category.BudgetLimit.Value)
         {
-            OnCategoryLimitExceeded?.Invoke(this, new CategoryLimitExceededEventArgs 
-            { 
-                CategoryName = category.Name, 
-                ExcessAmount = transactionsAmount + transaction.Amount - category.BudgetLimit.Value
+            OnCategoryLimitExceeded?.Invoke(this, new CategoryLimitExceededEventArgs
+            {
+                CategoryName = transaction.Category.Name,
+                ExcessAmount = transactionsAmount + transaction.Amount - transaction.Category.BudgetLimit.Value
             });
         }
     }

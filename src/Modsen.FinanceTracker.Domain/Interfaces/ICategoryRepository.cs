@@ -4,5 +4,5 @@ namespace Modsen.FinanceTracker.Domain.Interfaces;
 
 public interface ICategoryRepository : IRepository<Category>
 {
-    Task SeedAsync(CancellationToken cancellationToken = default);
+    public Task SeedAsync(CancellationToken cancellationToken = default);
 }

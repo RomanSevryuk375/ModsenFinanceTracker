@@ -10,10 +10,10 @@ public sealed class TransactionListView : ITransactionListView
     {
         var rowList = rows.ToList();
 
-        var pageSize = Constants.Tables.PageSize;
+        int pageSize = Constants.Tables.PageSize;
 
-        var totalPages = (int)Math.Ceiling((double)rowList.Count / pageSize);
-        var currentPage = 0;
+        int totalPages = (int)Math.Ceiling((double)rowList.Count / pageSize);
+        int currentPage = 0;
 
         bool keepPaginating = true;
 
@@ -21,9 +21,9 @@ public sealed class TransactionListView : ITransactionListView
         {
             AnsiConsole.Clear();
 
-            var chunk = rowList.Skip(currentPage * pageSize).Take(pageSize);
+            IEnumerable<TransactionRowModel> chunk = rowList.Skip(currentPage * pageSize).Take(pageSize);
 
-            var table = new Table()
+            Table table = new Table()
                 .Border(TableBorder.Rounded)
                 .Title($"[{Constants.Colors.Primary}]" +
                 $"{Constants.Tables.Title} (Page {currentPage + 1} of {totalPages})[/]")
@@ -35,7 +35,7 @@ public sealed class TransactionListView : ITransactionListView
             table.AddColumn($"{Constants.Tables.Description}");
             table.AddColumn($"{Constants.Tables.Amount}");
 
-            foreach (var row in chunk)
+            foreach (TransactionRowModel? row in chunk)
             {
                 table.AddRow(
                     row.Id,
@@ -53,33 +53,33 @@ public sealed class TransactionListView : ITransactionListView
             }
 
             var choices = new List<string>();
-            const string next = Constants.Tables.NextPageButton;
-            const string prev = Constants.Tables.PrevPageButton;
-            const string exit = Constants.Tables.ExitButton;
+            const string Next = Constants.Tables.NextPageButton;
+            const string Prev = Constants.Tables.PrevPageButton;
+            const string Exit = Constants.Tables.ExitButton;
 
             if (currentPage > 0)
             {
-                choices.Add(prev);
+                choices.Add(Prev);
             }
 
             if (currentPage < totalPages - 1)
             {
-                choices.Add(next);
+                choices.Add(Next);
             }
 
-            choices.Add(exit);
+            choices.Add(Exit);
 
             AnsiConsole.WriteLine();
-            var choice = AnsiConsole.Prompt(
+            string choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title(Constants.Tables.NavigationTitle)
                     .AddChoices(choices));
 
-            if (choice == next)
+            if (choice == Next)
             {
                 currentPage++;
             }
-            else if (choice == prev)
+            else if (choice == Prev)
             {
                 currentPage--;
             }

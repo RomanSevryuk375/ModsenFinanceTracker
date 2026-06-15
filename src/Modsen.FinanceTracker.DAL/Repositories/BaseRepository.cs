@@ -17,7 +17,7 @@ public abstract class BaseRepository<T>(
             return Task.FromCanceled<IEnumerable<T>>(cancellationToken);
         }
 
-        var query = storageTable.AsQueryable();
+        IQueryable<T> query = storageTable.AsQueryable();
 
         if (filter is not null)
         {
@@ -46,7 +46,7 @@ public abstract class BaseRepository<T>(
             return Task.FromCanceled<T?>(cancellationToken);
         }
 
-        var result = storageTable.FirstOrDefault(x => x.Id == id);
+        T? result = storageTable.FirstOrDefault(x => x.Id == id);
         return Task.FromResult(result);
     }
 
@@ -68,7 +68,7 @@ public abstract class BaseRepository<T>(
             return Task.FromCanceled(cancellationToken);
         }
 
-        var index = storageTable.FindIndex(x => x.Id == entity.Id);
+        int index = storageTable.FindIndex(x => x.Id == entity.Id);
         if (index is not -1)
         {
             storageTable[index] = entity;
@@ -83,7 +83,7 @@ public abstract class BaseRepository<T>(
             return Task.FromCanceled(cancellationToken);
         }
 
-        var existing = storageTable.FirstOrDefault(x => x.Id == id);
+        T? existing = storageTable.FirstOrDefault(x => x.Id == id);
         if (existing is not null)
         {
             storageTable.Remove(existing);
