@@ -9,20 +9,20 @@ public sealed class Wallet : IEntity
 
     [JsonInclude]
     [JsonPropertyName("Transactions")]
-    private List<Transaction> _transactions { get; set; } = [];
+    private List<Transaction> Transactions { get; set; } = [];
 
     public Guid Id { get; init; }
 
     [JsonInclude]
     public string Name { get; private set; } = string.Empty;
 
-    public decimal Balance => CalculateBalance(_transactions);
+    public decimal Balance => CalculateBalance(Transactions);
 
     [JsonInclude]
     public string BaseCurrency { get; private set; } = string.Empty;
 
     [JsonIgnore]
-    public IReadOnlyList<Transaction> Transactions => _transactions.AsReadOnly();
+    public IReadOnlyList<Transaction> MutableTransactions => Transactions.AsReadOnly();
 
     public Wallet() { }
 
@@ -50,7 +50,7 @@ public sealed class Wallet : IEntity
             return Result.Fail("Fail to add transaction. Balance wil become negative.");
         }
 
-        _transactions.Add(transaction);
+        Transactions.Add(transaction);
         return Result.Success();
     }
 
@@ -61,7 +61,7 @@ public sealed class Wallet : IEntity
             return Result.Fail("Cannot remove income: wallet balance would become negative.");
         }
 
-        _transactions.Remove(transaction);
+        Transactions.Remove(transaction);
         return Result.Success();
     }
 

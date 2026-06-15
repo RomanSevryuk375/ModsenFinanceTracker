@@ -124,6 +124,8 @@ public static class Constants
 
         public static string WalletDisplay(string name, string currency, decimal balance) =>
             $"{name} ({currency}) - Balance: {balance:N2}";
+
+        public const string EnterPassword = "Enter application password:";
     }
 
     public static class Info
@@ -145,6 +147,8 @@ public static class Constants
 
         public const string InvalidFormat = $"[{Colors.Error}]Invalid format[/]";
         public const string CurrencyLength = $"[{Colors.Error}]Currency must be exactly 3 characters.[/]";
+
+        public const string InvalidPassword = $"[{Colors.Error}]Invalid password! Access denied.[/]";
     }
 
     public static class UI

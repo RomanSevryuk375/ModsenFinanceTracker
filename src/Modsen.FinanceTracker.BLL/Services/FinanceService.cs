@@ -56,7 +56,7 @@ public sealed class FinanceService(
             return Result.Fail($"Wallet {walletId} not found.");
         }
 
-        Transaction? transaction = wallet.Transactions.FirstOrDefault(x => x.Id == transactionId);
+        Transaction? transaction = wallet.MutableTransactions.FirstOrDefault(x => x.Id == transactionId);
         if (transaction is null)
         {
             return Result.Fail($"Transaction {transactionId} not found.");
@@ -85,7 +85,7 @@ public sealed class FinanceService(
             return Result.Fail($"Wallet {walletId} not found.");
         }
 
-        Transaction? transaction = wallet.Transactions.FirstOrDefault(x => x.Id == transactionId);
+        Transaction? transaction = wallet.MutableTransactions.FirstOrDefault(x => x.Id == transactionId);
         if (transaction is null)
         {
             return Result.Fail($"Transaction {transactionId} not found.");
@@ -127,7 +127,7 @@ public sealed class FinanceService(
 
         Func<Transaction, bool> isMatch = filter.ToFilter();
 
-        var filteredList = wallet.Transactions
+        var filteredList = wallet.MutableTransactions
             .Where(isMatch)
             .ToList();
 
