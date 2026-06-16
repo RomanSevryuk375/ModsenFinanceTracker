@@ -3,9 +3,10 @@ using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Domain;
 
-namespace Modsen.FinanceTracker.BLL.Services;
+namespace Modsen.FinanceTracker.Infrastructure.Services;
 
-public sealed class CurrencyService(HttpClient httpClient) : ICurrencyService
+public sealed class CurrencyService(
+    HttpClient httpClient) : ICurrencyService
 {
     private const string ApiBaseUrl = "https://open.er-api.com/v6/latest/";
 

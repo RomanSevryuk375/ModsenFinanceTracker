@@ -1,22 +1,9 @@
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Modsen.FinanceTracker.BLL.Factories;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.BLL.Services;
-using Modsen.FinanceTracker.BLL.Validators;
-using Modsen.FinanceTracker.DAL;
-using Modsen.FinanceTracker.DAL.Context;
-using Modsen.FinanceTracker.DAL.Repositories;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Interfaces;
+using Modsen.FinanceTracker.BLL.Extensions;
+using Modsen.FinanceTracker.DAL.Extensions;
 using Modsen.FinanceTracker.Infrastructure.Configuration;
-using Modsen.FinanceTracker.UI.Actions;
-using Modsen.FinanceTracker.UI.Actions.TemplateActions;
-using Modsen.FinanceTracker.UI.Actions.TransactionActions;
-using Modsen.FinanceTracker.UI.Actions.WalletActions;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Modsen.FinanceTracker.UI.Menu;
-using Modsen.FinanceTracker.UI.Views;
+using Modsen.FinanceTracker.Infrastructure.Extensions;
+using Modsen.FinanceTracker.UI.Extensions;
 using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI;
@@ -39,78 +26,13 @@ internal class Program
             AppConfiguration config = AppConfiguration.Instance;
             var services = new ServiceCollection();
 
-            services.AddSingleton(sp => new JsonDbContext(config.JsonDbPath));
-            services.AddSingleton<IDataContext>(sp => sp.GetRequiredService<JsonDbContext>());
+            services.AddInfrastructure()
+                    .AddBLL(config.Currency)
+                    .AddDAL(config.JsonDbPath)
+                    .AddUi(config.Currency);
 
-            services.AddSingleton<ICategoryRepository, JsonCategoryRepository>();
-            services.AddSingleton<IWalletRepository, JsonWalletRepository>();
-            services.AddSingleton<IUnitOfWork, UnitOfWork>();
-
-            services.AddSingleton<IValidator<Transaction>, TransactionValidator>();
-            services.AddSingleton<IFinanceService, FinanceService>(sp => new FinanceService(
-                sp.GetRequiredService<IWalletRepository>(),
-                sp.GetRequiredService<IValidator<Transaction>>(),
-                sp.GetRequiredService<ICurrencyService>(),
-                sp.GetRequiredService<IUnitOfWork>(),
-                config.Currency));
-
-            services.AddSingleton<ICategoryService, CategoryService>();
-            services.AddSingleton<IReportService, ReportService>();
-            services.AddSingleton<IWalletService, WalletService>();
-            services.AddSingleton<ISchedulerService, SchedulerService>();
-
-            services.AddMemoryCache();
-            services.AddHttpClient<CurrencyService>();
-            services.AddSingleton<ICurrencyService>(sp =>  new CachedCurrencyService(
-                    sp.GetRequiredService<CurrencyService>(),
-                    sp.GetRequiredService<IMemoryCache>()));
-
-            services.AddTransient<ITransactionFactory, TransactionFactory>();
-
-            services.AddTransient<ITransactionListView, TransactionListView>();
-            services.AddTransient<IAnalyticsListView, AnalyticsListView>();
-            services.AddTransient<IWalletListView, WalletListView>();
-            services.AddTransient<ITemplateListView, TemplateListView>();
-
-            services.AddTransient<IWalletMenuAction, ViewWalletsAction>();
-            services.AddTransient<IWalletMenuAction, CreateWalletAction>();
-            services.AddTransient<IWalletMenuAction, DeleteWalletAction>();
-            services.AddTransient<IMenuAction, ManageWalletsAction>();
-
-            services.AddTransient<ITransactionMenuAction, ViewTransactionAction>();
-            services.AddTransient<ITransactionMenuAction, AddTransactionAction>();
-            services.AddTransient<ITransactionMenuAction, UpdateTransactionAction>();
-            services.AddTransient<ITransactionMenuAction, DeleteTransactionAction>();
-            services.AddTransient<IMenuAction, ManageTransactionsAction>();
-
-            services.AddTransient<ITemplateMenuAction, AddTemplateAction>();
-            services.AddTransient<ITemplateMenuAction, ViewTemplatesAction>();
-            services.AddTransient<ITemplateMenuAction, DeleteTemplateAction>();
-            services.AddTransient<IMenuAction, ManageTemplatesAction>();
-
-            services.AddTransient<IMenuAction, CheckBalanceAction>(sp => new CheckBalanceAction(
-                sp.GetRequiredService<IFinanceService>(),
-                sp.GetRequiredService<IWalletService>(),
-                config.Currency));
-
-            services.AddTransient<IMenuAction, AnalyticsAction>();
-
-            services.AddTransient<IMenuAction, ExportReportAction>();
-            services.AddTransient<IMenuAction, ExitAction>();
-
-            services.AddSingleton<IMainMenu, MainMenu>();
-            services.AddSingleton<IApp, App>();
-
-            ServiceProvider serviceProvider = services.BuildServiceProvider();
-
-            JsonDbContext context = serviceProvider.GetRequiredService<JsonDbContext>();
-            await context.LoadAsync(cts.Token);
-
-            ICategoryRepository categoryRepo = serviceProvider.GetRequiredService<ICategoryRepository>();
-            await categoryRepo.SeedAsync(cts.Token);
-
-            IApp app = serviceProvider.GetRequiredService<IApp>();
-            await app.RunAsync(cts.Token);
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            await serviceProvider.InitApplicationAsync(cts.Token);
         }
         catch (OperationCanceledException)
         {
