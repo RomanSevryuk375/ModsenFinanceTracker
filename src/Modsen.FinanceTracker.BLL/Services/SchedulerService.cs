@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Modsen.FinanceTracker.Domain.Extensions;
-using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
