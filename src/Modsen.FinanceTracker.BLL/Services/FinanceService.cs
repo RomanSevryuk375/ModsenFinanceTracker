@@ -10,8 +10,12 @@ namespace Modsen.FinanceTracker.BLL.Services;
 public sealed class FinanceService(
     IWalletRepository repository,
     IValidator<Transaction> validator,
-    IUnitOfWork unitOfWork) : IFinanceService
+    ICurrencyService currencyService,
+    IUnitOfWork unitOfWork,
+    string sytemCurrency) : IFinanceService
 {
+    private readonly string _sytemCurrency = sytemCurrency ?? string.Empty;
+
     public event EventHandler<CategoryLimitExceededEventArgs>? OnCategoryLimitExceeded;
     public async Task<Result> AddTransactionAsync(
         Guid walletId,
@@ -111,7 +115,16 @@ public sealed class FinanceService(
             return Result.Fail<decimal>($"Wallet {walletId} not found.");
         }
 
-        return Result.Success(wallet.Balance);
+        Result<decimal> exchangeRateResult = await currencyService.GetExchangeRateAsync(
+            wallet.BaseCurrency, _sytemCurrency, cancellationToken);
+        if (exchangeRateResult.IsFailure)
+        {
+            return Result.Fail<decimal>(exchangeRateResult.Error);
+        }
+
+        decimal actualBalance = wallet.Balance * exchangeRateResult.Value;
+
+        return Result.Success(actualBalance);
     }
 
     public async Task<Result<IReadOnlyList<Transaction>>> GetFilteredTransactionsAsync(

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Modsen.FinanceTracker.BLL.Factories;
 using Modsen.FinanceTracker.BLL.Interfaces;
@@ -46,11 +47,23 @@ internal class Program
             services.AddSingleton<IUnitOfWork, UnitOfWork>();
 
             services.AddSingleton<IValidator<Transaction>, TransactionValidator>();
-            services.AddSingleton<IFinanceService, FinanceService>();
+            services.AddSingleton<IFinanceService, FinanceService>(sp => new FinanceService(
+                sp.GetRequiredService<IWalletRepository>(),
+                sp.GetRequiredService<IValidator<Transaction>>(),
+                sp.GetRequiredService<ICurrencyService>(),
+                sp.GetRequiredService<IUnitOfWork>(),
+                config.Currency));
+
             services.AddSingleton<ICategoryService, CategoryService>();
             services.AddSingleton<IReportService, ReportService>();
             services.AddSingleton<IWalletService, WalletService>();
             services.AddSingleton<ISchedulerService, SchedulerService>();
+
+            services.AddMemoryCache();
+            services.AddHttpClient<CurrencyService>();
+            services.AddSingleton<ICurrencyService>(sp =>  new CachedCurrencyService(
+                    sp.GetRequiredService<CurrencyService>(),
+                    sp.GetRequiredService<IMemoryCache>()));
 
             services.AddTransient<ITransactionFactory, TransactionFactory>();
 
@@ -75,7 +88,11 @@ internal class Program
             services.AddTransient<ITemplateMenuAction, DeleteTemplateAction>();
             services.AddTransient<IMenuAction, ManageTemplatesAction>();
 
-            services.AddTransient<IMenuAction, CheckBalanceAction>();
+            services.AddTransient<IMenuAction, CheckBalanceAction>(sp => new CheckBalanceAction(
+                sp.GetRequiredService<IFinanceService>(),
+                sp.GetRequiredService<IWalletService>(),
+                config.Currency));
+
             services.AddTransient<IMenuAction, AnalyticsAction>();
 
             services.AddTransient<IMenuAction, ExportReportAction>();
