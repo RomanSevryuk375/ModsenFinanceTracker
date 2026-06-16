@@ -1,6 +1,3 @@
-﻿using Modsen.FinanceTracker.Domain.Enums;
-using Modsen.FinanceTracker.Domain.Interfaces;
-
 namespace Modsen.FinanceTracker.Domain.Entities;
 
 public sealed class Category : IEntity

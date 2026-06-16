@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Modsen.FinanceTracker.Domain.Interfaces;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 

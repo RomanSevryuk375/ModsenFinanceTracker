@@ -1,5 +1,3 @@
-﻿using System.Linq.Expressions;
-
 namespace Modsen.FinanceTracker.Domain.Interfaces;
 
 public interface IRepository<T> where T : class, IEntity

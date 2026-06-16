@@ -1,8 +1,6 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
+using Microsoft.Extensions.Logging;
 using Modsen.FinanceTracker.Infrastructure.Configuration;
 using Modsen.FinanceTracker.Infrastructure.Security;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
 
 namespace Modsen.FinanceTracker.UI;
 
@@ -10,7 +8,8 @@ public sealed class App(
     IMainMenu mainMenu,
     IEnumerable<IMenuAction> actions,
     IFinanceService financeService,
-    ISchedulerService schedulerService) : IApp
+    ISchedulerService schedulerService,
+    ILogger<App> logger) : IApp
 {
     private bool _isRunning = true;
 
@@ -59,6 +58,7 @@ public sealed class App(
 
         if (action is not null)
         {
+            logger.LogInformation("User navigated to menu action: '{ActionName}'", action.Name);
             await action.ExecuteAsync(cancellationToken);
         }
 
@@ -66,12 +66,13 @@ public sealed class App(
         Console.ReadKey(true);
     }
 
-    private static bool AuthenticateUser()
+    private bool AuthenticateUser()
     {
         AppConfiguration config = AppConfiguration.Instance;
 
         if (!config.IsPasswordEnabled)
         {
+            logger.LogInformation("User successfully authenticated.");
             return true;
         }
 
@@ -86,6 +87,7 @@ public sealed class App(
             return true;
         }
 
+        logger.LogWarning("Failed authentication attempt: Invalid password entered.");
         AnsiConsole.MarkupLine(Constants.Errors.InvalidPassword);
         return false;
     }

@@ -1,5 +1,3 @@
-﻿using Modsen.FinanceTracker.UI.Interfaces;
-
 namespace Modsen.FinanceTracker.UI.Actions;
 
 public sealed class ExitAction : IMenuAction

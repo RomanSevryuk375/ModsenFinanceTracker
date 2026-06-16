@@ -1,19 +1,22 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Interfaces;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class ReportService(IWalletRepository repository) : IReportService
 {
-    public async Task ExportAsync(
-        Guid walletId, 
+    public async Task<Result> ExportAsync(
+        Guid walletId,
         IExportStrategy strategy,
-        string filePath, 
+        string filePath,
         CancellationToken cancellationToken)
     {
-        Wallet wallet = await repository.GetByIdAsync(walletId, cancellationToken) ??
-            throw new ArgumentException($"Wallet {walletId} not found");
+        Wallet? wallet = await repository.GetByIdAsync(walletId, cancellationToken);
+        if (wallet is null)
+        {
+            return Result.Fail($"Wallet {walletId} not found.");
+        }
+
         await strategy.ExportAsync(wallet.Transactions, filePath, cancellationToken);
+        return Result.Success();
     }
 }

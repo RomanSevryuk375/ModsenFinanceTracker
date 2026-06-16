@@ -1,23 +1,22 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Events;
-using Modsen.FinanceTracker.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class SchedulerService(
     IWalletRepository walletRepository,
     ITransactionFactory factory,
-    IUnitOfWork unitOfWork) : ISchedulerService
+    IUnitOfWork unitOfWork,
+    ILogger<SchedulerService> logger) : ISchedulerService
 {
     public event EventHandler<TransactionWrittenOffEventArgs>? OnTransactionWrittenOff;
 
-    public async Task CheckAndProcessRecurringTransactionsAsync(CancellationToken cancellationToken)
+    public async Task<Result> CheckAndProcessRecurringTransactionsAsync(CancellationToken cancellationToken)
     {
         IEnumerable<Wallet> wallets = await walletRepository.GetAllAsync(
             null, null, null, cancellationToken);
 
+        int txCount = 0;
         foreach (Wallet wallet in wallets)
         {
             bool walletModified = false;
@@ -31,7 +30,15 @@ public sealed class SchedulerService(
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
+
+            txCount++;
         }
+
+        logger.LogInformation("Scheduler processed {Count} wallets and executed {TxCount} transactions.",
+            wallets.Count(),
+            txCount.ToString());
+
+        return Result.Success();
     }
 
     private bool WriteOffTransaction(RecurringTransactionTemplate template, Wallet wallet, bool walletModified)

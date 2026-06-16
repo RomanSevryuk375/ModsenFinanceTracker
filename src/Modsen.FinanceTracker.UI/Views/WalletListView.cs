@@ -1,7 +1,3 @@
-﻿using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
-
 namespace Modsen.FinanceTracker.UI.Views;
 
 public sealed class WalletListView : IWalletListView

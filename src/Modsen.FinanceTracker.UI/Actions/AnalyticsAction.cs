@@ -1,11 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.DTOs;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Modsen.FinanceTracker.UI.Models;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 

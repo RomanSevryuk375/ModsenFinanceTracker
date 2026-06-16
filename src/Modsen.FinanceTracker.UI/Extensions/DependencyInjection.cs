@@ -1,12 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
-using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.DAL.Context;
 using Modsen.FinanceTracker.Domain.Interfaces;
 using Modsen.FinanceTracker.UI.Actions;
 using Modsen.FinanceTracker.UI.Actions.TemplateActions;
 using Modsen.FinanceTracker.UI.Actions.TransactionActions;
 using Modsen.FinanceTracker.UI.Actions.WalletActions;
-using Modsen.FinanceTracker.UI.Interfaces;
 using Modsen.FinanceTracker.UI.Menu;
 using Modsen.FinanceTracker.UI.Views;
 

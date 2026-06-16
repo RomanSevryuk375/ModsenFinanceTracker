@@ -1,6 +1,3 @@
-﻿using Modsen.FinanceTracker.BLL.Constants;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain.Entities;
 using Xceed.Document.NET;
 using Xceed.Words.NET;
 

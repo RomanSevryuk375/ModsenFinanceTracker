@@ -1,10 +1,4 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Enums;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.UI.Actions.TemplateActions;
 
@@ -113,14 +107,15 @@ public sealed class AddTemplateAction(
         TransactionType type,
         CancellationToken cancellationToken)
     {
-        var categories = (await categoryService
-            .GetCategoriesByTypeAsync(type, cancellationToken)).ToList();
-
-        if (categories.Count == 0)
+        Result<IEnumerable<Category>> categoriesResult = await categoryService
+            .GetCategoriesByTypeAsync(type, cancellationToken);
+        if (categoriesResult.IsFailure || categoriesResult.Value.ToList().Count == 0)
         {
             AnsiConsole.MarkupLine(Constants.Errors.CategoriesNotFound);
             return null;
         }
+
+        IEnumerable<Category> categories = categoriesResult.Value;
 
         return AnsiConsole.Prompt(new SelectionPrompt<Category>()
             .Title(Constants.Prompts.Category)

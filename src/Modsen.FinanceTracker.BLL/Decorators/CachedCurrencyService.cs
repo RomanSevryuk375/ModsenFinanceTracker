@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
+using Modsen.FinanceTracker.Domain.Extensions;
 
-namespace Modsen.FinanceTracker.BLL.Services;
+namespace Modsen.FinanceTracker.BLL.Decorators;
 
 public sealed class CachedCurrencyService(
     ICurrencyService decorated,
