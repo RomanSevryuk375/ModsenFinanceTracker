@@ -1,11 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.DTOs;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Modsen.FinanceTracker.UI.Models;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
@@ -79,14 +72,14 @@ public sealed class AnalyticsAction(
 
     private static IEnumerable<AnalyticsRowModel> PrepareRowModels(List<ExpenseTransaction> expenses)
     {
-        decimal totalAmount = expenses.Sum(x => x.Amount);
+        decimal totalAmount = expenses.Sum(x => x.Amount.Amount);
 
         return expenses
             .GroupBy(x => x.Category.Id)
             .Select(g =>
             {
                 string categoryName = g.First().Category.Name;
-                decimal groupAmount = g.Sum(x => x.Amount);
+                decimal groupAmount = g.Sum(x => x.Amount.Amount);
 
                 double percent = totalAmount > 0
                     ? ((double)groupAmount / (double)totalAmount) * 100

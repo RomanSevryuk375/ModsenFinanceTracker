@@ -1,8 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.UI.Actions.WalletActions;
 

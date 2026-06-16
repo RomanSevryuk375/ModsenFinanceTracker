@@ -1,16 +1,14 @@
-﻿using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 
 public sealed class CheckBalanceAction(
     IFinanceService financeService,
-    IWalletService walletService) : IMenuAction
+    IWalletService walletService,
+    string systemCurrecy) : IMenuAction
 {
+    private readonly string _systemCurrecy = systemCurrecy;
+
     public string Name => Constants.MainMenu.ActionBalance;
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -29,8 +27,11 @@ public sealed class CheckBalanceAction(
             return;
         }
 
-        string color = balanceResult.Value >= 0 ? Constants.Colors.Success : Constants.Colors.Error;
-        string message = string.Format(Constants.Balance.MessageTemplate, color, balanceResult.Value, wallet.BaseCurrency);
+        string color = balanceResult.Value >= 0
+            ? Constants.Colors.Success
+            : Constants.Colors.Error;
+        string message = string.Format(
+            Constants.Balance.MessageTemplate, color, balanceResult.Value, _systemCurrecy);
 
         var panel = new Panel(Align.Center(new Markup(message), VerticalAlignment.Middle))
         {

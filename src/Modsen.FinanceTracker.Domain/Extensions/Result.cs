@@ -1,4 +1,4 @@
-﻿namespace Modsen.FinanceTracker.Domain;
+namespace Modsen.FinanceTracker.Domain.Extensions;
 
 public class Result
 {

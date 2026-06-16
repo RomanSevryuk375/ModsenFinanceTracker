@@ -9,4 +9,7 @@
     <Project Path="src/Modsen.FinanceTracker.Infrastructure/Modsen.FinanceTracker.Infrastructure.csproj" />
     <Project Path="src/Modsen.FinanceTracker.UI/Modsen.FinanceTracker.UI.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FinanceTracker.Tests/FinanceTracker.Tests.csproj" Id="d77ccf22-db9d-4c41-9fda-3d8144ca81f4" />
+  </Folder>
 </Solution>

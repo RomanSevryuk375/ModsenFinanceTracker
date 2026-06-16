@@ -1,24 +1,22 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Enums;
-using Modsen.FinanceTracker.Domain.Interfaces;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class CategoryService(ICategoryRepository repository) : ICategoryService
 {
-    public async Task<IEnumerable<Category>> GetAllCategoriesAsync(
+    public async Task<Result<IEnumerable<Category>>> GetAllCategoriesAsync(
         CancellationToken cancellationToken = default)
     {
-        return await repository.GetAllAsync(
+        IEnumerable<Category> categories = await repository.GetAllAsync(
             cancellationToken: cancellationToken);
+        return Result.Success(categories);
     }
 
-    public async Task<IEnumerable<Category>> GetCategoriesByTypeAsync(
-        TransactionType type, 
-        CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<Category>>> GetCategoriesByTypeAsync(
+        TransactionType type, CancellationToken cancellationToken = default)
     {
-        return await repository.GetAllAsync(
+        IEnumerable<Category> categories = await repository.GetAllAsync(
             c => c.Type == type, cancellationToken: cancellationToken);
+        return Result.Success(categories);
     }
 }

@@ -1,14 +1,13 @@
-﻿using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Enums;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.BLL.Interfaces;
 
 public interface ICategoryService
 {
-    public Task<IEnumerable<Category>> GetAllCategoriesAsync(
+    public Task<Result<IEnumerable<Category>>> GetAllCategoriesAsync(
         CancellationToken cancellationToken = default);
 
-    public Task<IEnumerable<Category>> GetCategoriesByTypeAsync(
-        TransactionType type, 
+    public Task<Result<IEnumerable<Category>>> GetCategoriesByTypeAsync(
+        TransactionType type,
         CancellationToken cancellationToken = default);
 }

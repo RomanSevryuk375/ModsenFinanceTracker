@@ -1,21 +1,24 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Enums;
+using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.BLL.Factories;
 
 public sealed class TransactionFactory : ITransactionFactory
 {
-    public Transaction CreateTransaction(
-        TransactionType type, decimal amount, string description, Category category)
+    public Transaction? CreateTransaction(
+        TransactionType type, Money amount, TransactionDescription description, Category category)
     {
         var id = Guid.NewGuid();
-        DateTime date = DateTime.Now;
+        Result<TransactionDate> date = TransactionDate.Create(DateTime.UtcNow);
+        if (date.IsFailure)
+        {
+            return null;
+        }
 
         return type switch
         {
-            TransactionType.Income => new IncomeTransaction(id, amount, description, date, category),
-            TransactionType.Expense => new ExpenseTransaction(id, amount, description, date, category),
+            TransactionType.Income => new IncomeTransaction(id, amount, description, date.Value, category),
+            TransactionType.Expense => new ExpenseTransaction(id, amount, description, date.Value, category),
 
             _ => throw new ArgumentException("Invalid transaction type", nameof(type))
         };

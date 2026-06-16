@@ -1,9 +1,4 @@
-﻿using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
 
 namespace Modsen.FinanceTracker.UI.Actions.WalletActions;
 
@@ -54,7 +49,8 @@ public sealed class DeleteWalletAction(
         return AnsiConsole.Prompt(
             new SelectionPrompt<Wallet>()
                 .Title(Constants.Prompts.DeleteWalletSelection)
-                .UseConverter(w => Constants.Prompts.WalletDisplay(w.Name, w.BaseCurrency, w.Balance))
+                .UseConverter(w => Constants.Prompts.WalletDisplay(
+                    w.Name, w.BaseCurrency, w.Balance.Amount))
                 .AddChoices(choices));
     }
 }

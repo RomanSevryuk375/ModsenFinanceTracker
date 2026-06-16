@@ -1,17 +1,16 @@
-using Modsen.FinanceTracker.BLL.DTOs;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Events;
-using Modsen.FinanceTracker.Domain.Interfaces;
+using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class FinanceService(
     IWalletRepository repository,
-    IValidator<Transaction> validator,
-    IUnitOfWork unitOfWork) : IFinanceService
+    ICurrencyService currencyService,
+    IUnitOfWork unitOfWork,
+    string sytemCurrency) : IFinanceService
 {
+    private readonly string _sytemCurrency = sytemCurrency ?? string.Empty;
+
     public event EventHandler<CategoryLimitExceededEventArgs>? OnCategoryLimitExceeded;
     public async Task<Result> AddTransactionAsync(
         Guid walletId,
@@ -22,11 +21,6 @@ public sealed class FinanceService(
         if (wallet is null)
         {
             return Result.Fail($"Wallet {walletId} not found.");
-        }
-        Result<Transaction> validationResult = validator.Validate(transaction);
-        if (validationResult.IsFailure)
-        {
-            return Result.Fail(validationResult.Error);
         }
 
         if (transaction is ExpenseTransaction)
@@ -91,7 +85,22 @@ public sealed class FinanceService(
             return Result.Fail($"Transaction {transactionId} not found.");
         }
 
-        Result updateResult = wallet.UpdateTransaction(transaction, newAmount, newDescription);
+        Result<Money> newAmountResult = Money.Create(newAmount, wallet.BaseCurrency);
+        if (newAmountResult.IsFailure)
+        {
+            return Result.Fail(newAmountResult.Error);
+        }
+
+        Result<TransactionDescription> newDescriptionResult = TransactionDescription.Create(newDescription);
+        if (newDescriptionResult.IsFailure)
+        {
+            return Result.Fail(newDescriptionResult.Error);
+        }
+
+        Result updateResult = wallet.UpdateTransaction(
+            transaction,
+            newAmountResult.Value,
+            newDescriptionResult.Value);
         if (updateResult.IsFailure)
         {
             return Result.Fail(updateResult.Error);
@@ -111,7 +120,16 @@ public sealed class FinanceService(
             return Result.Fail<decimal>($"Wallet {walletId} not found.");
         }
 
-        return Result.Success(wallet.Balance);
+        Result<decimal> exchangeRateResult = await currencyService.GetExchangeRateAsync(
+            wallet.BaseCurrency, _sytemCurrency, cancellationToken);
+        if (exchangeRateResult.IsFailure)
+        {
+            return Result.Fail<decimal>(exchangeRateResult.Error);
+        }
+
+        decimal actualBalance = wallet.Balance.Amount * exchangeRateResult.Value;
+
+        return Result.Success(actualBalance);
     }
 
     public async Task<Result<IReadOnlyList<Transaction>>> GetFilteredTransactionsAsync(
@@ -155,15 +173,15 @@ public sealed class FinanceService(
 
         decimal transactionsAmount = filterResult.Value.ToList()
             .Where(x => x.Category.Id == transaction.Category.Id)
-            .Sum(x => x.Amount);
+            .Sum(x => x.Amount.Amount);
 
         if (transaction.Category.BudgetLimit.HasValue &&
-            (transactionsAmount + transaction.Amount) > transaction.Category.BudgetLimit.Value)
+            (transactionsAmount + transaction.Amount.Amount) > transaction.Category.BudgetLimit.Value)
         {
             OnCategoryLimitExceeded?.Invoke(this, new CategoryLimitExceededEventArgs
             {
                 CategoryName = transaction.Category.Name,
-                ExcessAmount = transactionsAmount + transaction.Amount - transaction.Category.BudgetLimit.Value
+                ExcessAmount = transactionsAmount + transaction.Amount.Amount - transaction.Category.BudgetLimit.Value
             });
         }
     }

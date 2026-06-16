@@ -1,7 +1,3 @@
-using Modsen.FinanceTracker.UI.Interfaces;
-using Modsen.FinanceTracker.UI.Models;
-using Spectre.Console;
-
 namespace Modsen.FinanceTracker.UI.Views;
 
 public sealed class TransactionListView : ITransactionListView

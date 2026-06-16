@@ -1,21 +1,19 @@
-using System.Text.Json;
-using Modsen.FinanceTracker.DAL.Models;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Interfaces;
-
 namespace Modsen.FinanceTracker.DAL.Context;
 
 public sealed class JsonDbContext : IDataContext
 {
     private readonly string _filePath;
     private readonly JsonSerializerOptions _options;
+    private readonly ILogger<JsonDbContext> _logger;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     public List<Wallet> Wallets { get; private set; } = [];
     public List<Category> Categories { get; private set; } = [];
 
-    public JsonDbContext(string filePath)
+    public JsonDbContext(string filePath, ILogger<JsonDbContext> logger)
     {
         _filePath = filePath;
+        _logger = logger;
         _options = new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -28,28 +26,72 @@ public sealed class JsonDbContext : IDataContext
     {
         if (!File.Exists(_filePath))
         {
+            _logger.LogInformation("Database file '{FilePath}' not found. Starting with empty database.", _filePath);
             return;
         }
 
-        string json = await File.ReadAllTextAsync(_filePath, cancellationToken);
-        JsonDataModel? data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
-
-        if (data is not null)
+        try
         {
-            Wallets = data.Wallets;
-            Categories = data.Categories;
+            _logger.LogInformation("Loading database from '{FilePath}'...", _filePath);
+
+            string json = await File.ReadAllTextAsync(_filePath, cancellationToken);
+            JsonDataModel? data = JsonSerializer.Deserialize<JsonDataModel>(json, _options);
+
+            if (data is not null)
+            {
+                Wallets = data.Wallets;
+                Categories = data.Categories;
+                _logger.LogInformation(
+                    "Database loaded successfully. Wallets: {WalletsCount}, Categories: {CategoriesCount}.",
+                    Wallets.Count,
+                    Categories.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "FATAL ERROR: Failed to load database from '{FilePath}'!", _filePath);
+            throw;
         }
     }
-    
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var data = new JsonDataModel
+        await _semaphore.WaitAsync(cancellationToken);
+        try
         {
-            Wallets = Wallets, 
-            Categories = Categories
-        };
-        string json = JsonSerializer.Serialize(data, _options);
+            _logger.LogDebug("Initiating database save to '{FilePath}'...", _filePath);
 
-        await File.WriteAllTextAsync(_filePath, json, cancellationToken);
+            var data = new JsonDataModel
+            {
+                Wallets = Wallets,
+                Categories = Categories
+            };
+            string json = JsonSerializer.Serialize(data, _options);
+
+            string tempPath = _filePath + ".tmp";
+            string backupPath = _filePath + ".bak";
+
+            await File.WriteAllTextAsync(tempPath, json, cancellationToken);
+
+            if (File.Exists(_filePath))
+            {
+                File.Replace(tempPath, _filePath, backupPath);
+            }
+            else
+            {
+                File.Move(tempPath, _filePath);
+            }
+
+            _logger.LogInformation("Database saved successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "FATAL ERROR: Failed to save database changes to '{FilePath}'!", _filePath);
+            throw;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 }

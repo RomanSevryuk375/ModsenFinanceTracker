@@ -1,11 +1,3 @@
-﻿using Modsen.FinanceTracker.BLL.DTOs;
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Modsen.FinanceTracker.UI.Models;
-using Spectre.Console;
-
 namespace Modsen.FinanceTracker.UI.Actions.TransactionActions;
 
 public sealed class ViewTransactionAction(
@@ -79,9 +71,9 @@ public sealed class ViewTransactionAction(
     {
         return transactions.Select(t => new TransactionRowModel(
             t.Id.ToString()[..Constants.UI.GuidShortLength],
-            t.Date.ToShortDateString(),
+            t.Date.Value.ToShortDateString(),
             t.Category?.Name ?? "N/A",
-            t.Description,
+            t.Description.Value,
             FormatAmount(t)
         ));
     }

@@ -1,10 +1,5 @@
-﻿using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Enums;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects; 
 
 namespace Modsen.FinanceTracker.UI.Actions.TransactionActions;
 
@@ -31,32 +26,36 @@ public sealed class AddTransactionAction(
             return;
         }
 
-        decimal amount = await PromptAmountAsync(wallet.Id, category, cancellationToken);
-        string description = PromptDescription();
+        Money amount = await PromptAmountAsync(wallet, category, cancellationToken);
+        TransactionDescription description = PromptDescription();
+
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        Result result = await financeService.AddTransactionAsync(
-            wallet.Id, 
-            factory.CreateTransaction(type, amount, description, category), 
-            cancellationToken);
+        Transaction? transaction = factory.CreateTransaction(type, amount, description, category);
+        if (transaction is null)
+        {
+            return;
+        }
+
+        Result result = await financeService.AddTransactionAsync(wallet.Id, transaction, cancellationToken);
 
         UIHelper.ProcessResult(result, Constants.Success.AddTransaction);
     }
 
-    private async Task<decimal> PromptAmountAsync(
-        Guid walletId, 
-        Category category, 
+    private async Task<Money> PromptAmountAsync(
+        Wallet wallet,
+        Category category,
         CancellationToken cancellationToken)
     {
-        Result<decimal> balanceResult = await financeService.GetBalanceAsync(walletId, cancellationToken);
-        decimal currentBalance = balanceResult.IsSuccess
-            ? balanceResult.Value 
-            : 0;
+        Result<decimal> balanceResult = await financeService.GetBalanceAsync(wallet.Id, cancellationToken);
+        Money currentBalance = balanceResult.IsSuccess
+            ? Money.Create(balanceResult.Value, wallet.BaseCurrency).Value
+            : Money.Create(0, wallet.BaseCurrency).Value;
 
-        return AnsiConsole.Prompt(new TextPrompt<decimal>(Constants.Prompts.Amount)
+        decimal amountDecimal = AnsiConsole.Prompt(new TextPrompt<decimal>(Constants.Prompts.Amount)
             .Validate(amount =>
             {
                 if (amount <= 0)
@@ -64,39 +63,63 @@ public sealed class AddTransactionAction(
                     return ValidationResult.Error(Constants.Errors.NegativeAmount);
                 }
 
-                if (category!.Type is TransactionType.Expense && (currentBalance - amount < 0))
+                Result<Money> moneyResult = Money.Create(amount, wallet.BaseCurrency);
+                if (moneyResult.IsFailure)
+                {
+                    return ValidationResult.Error($"[{Constants.Colors.Error}]{moneyResult.Error}[/]");
+                }
+
+                if (category.Type is TransactionType.Expense && currentBalance < moneyResult.Value)
                 {
                     return ValidationResult.Error(Constants.Errors.BalanceBecomeNegative);
                 }
 
                 return ValidationResult.Success();
             }));
+
+        return Money.Create(amountDecimal, wallet.BaseCurrency).Value;
+    }
+
+    private static TransactionDescription PromptDescription()
+    {
+        string descriptionString = AnsiConsole.Prompt(new TextPrompt<string>(Constants.Prompts.Description)
+            .Validate(desc =>
+            {
+                Result<TransactionDescription> result = TransactionDescription.Create(desc);
+
+                return result.IsSuccess
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error($"[{Constants.Colors.Error}]{result.Error}[/]");
+            }));
+
+        return TransactionDescription.Create(descriptionString).Value;
     }
 
     private static TransactionType PromptTransactionType()
     {
         return AnsiConsole.Confirm(Constants.Prompts.TransactionType)
-            ? TransactionType.Income 
+            ? TransactionType.Income
             : TransactionType.Expense;
     }
 
     private async Task<Category?> GetSelectedCategoryAsync(
-        TransactionType type, 
+        TransactionType type,
         CancellationToken cancellationToken)
     {
-        var categories = (await categoryService.GetCategoriesByTypeAsync(type, cancellationToken)).ToList();
-        if (categories.Count == 0)
+        Result<IEnumerable<Category>> categoriesResult = await categoryService
+            .GetCategoriesByTypeAsync(type, cancellationToken);
+
+        if (categoriesResult.IsFailure || !categoriesResult.Value.Any())
         {
             AnsiConsole.MarkupLine(Constants.Errors.CategoriesNotFound);
             return null;
         }
+
+        IEnumerable<Category> categories = categoriesResult.Value;
 
         return AnsiConsole.Prompt(new SelectionPrompt<Category>()
             .Title(Constants.Prompts.Category)
             .UseConverter(c => c.Name)
             .AddChoices(categories));
     }
-
-    private static string PromptDescription() =>
-        AnsiConsole.Ask<string>(Constants.Prompts.Description);
 }

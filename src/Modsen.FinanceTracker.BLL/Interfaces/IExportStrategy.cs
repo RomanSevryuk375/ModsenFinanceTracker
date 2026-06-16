@@ -1,5 +1,3 @@
-using Modsen.FinanceTracker.Domain.Entities;
-
 namespace Modsen.FinanceTracker.BLL.Interfaces;
 
 public interface IExportStrategy

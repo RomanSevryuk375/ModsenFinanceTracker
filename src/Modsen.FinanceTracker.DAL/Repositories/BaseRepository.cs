@@ -1,6 +1,3 @@
-﻿using System.Linq.Expressions;
-using Modsen.FinanceTracker.Domain.Interfaces;
-
 namespace Modsen.FinanceTracker.DAL.Repositories;
 
 public abstract class BaseRepository<T>(

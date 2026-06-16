@@ -1,10 +1,5 @@
-using Modsen.FinanceTracker.BLL.Interfaces;
-using Modsen.FinanceTracker.Domain;
-using Modsen.FinanceTracker.Domain.Entities;
-using Modsen.FinanceTracker.Domain.Enums;
-using Modsen.FinanceTracker.UI.Helpers;
-using Modsen.FinanceTracker.UI.Interfaces;
-using Spectre.Console;
+using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.UI.Actions.TemplateActions;
 
@@ -41,12 +36,12 @@ public sealed class AddTemplateAction(
         }
 
         await ProcessTemplateCreationAsync(
-            wallet.Id, amount, name, description,
+            wallet, amount, name, description,
             period, nextDate, category, cancellationToken);
     }
 
     private async Task ProcessTemplateCreationAsync(
-        Guid walletId,
+        Wallet wallet,
         decimal amount,
         string name,
         string description,
@@ -55,8 +50,23 @@ public sealed class AddTemplateAction(
         Category category,
         CancellationToken cancellationToken)
     {
+        Result<Money> amountResult = Money.Create(amount, wallet.BaseCurrency);
+        if (amountResult.IsFailure)
+        {
+            AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]{amountResult.Error}[/]");
+            return;
+        }
+
+        Result<TransactionDescription> descriptionResult = TransactionDescription.Create(description);
+        if (descriptionResult.IsFailure)
+        {
+            AnsiConsole.MarkupLine($"[{Constants.Colors.Error}]{descriptionResult.Error}[/]");
+            return;
+        }
+
+
         Result<RecurringTransactionTemplate> templateResult = RecurringTransactionTemplate.Create(
-            amount, name, description, period, nextDate, category);
+            amountResult.Value, name, descriptionResult.Value, period, nextDate, category);
 
         if (templateResult.IsFailure)
         {
@@ -65,7 +75,7 @@ public sealed class AddTemplateAction(
         }
 
         Result result = await financeService.AddTemplateAsync(
-            walletId, templateResult.Value, cancellationToken);
+            wallet.Id, templateResult.Value, cancellationToken);
 
         UIHelper.ProcessResult(result, Constants.Success.AddTemplate);
     }
@@ -113,14 +123,15 @@ public sealed class AddTemplateAction(
         TransactionType type,
         CancellationToken cancellationToken)
     {
-        var categories = (await categoryService
-            .GetCategoriesByTypeAsync(type, cancellationToken)).ToList();
-
-        if (categories.Count == 0)
+        Result<IEnumerable<Category>> categoriesResult = await categoryService
+            .GetCategoriesByTypeAsync(type, cancellationToken);
+        if (categoriesResult.IsFailure || categoriesResult.Value.ToList().Count == 0)
         {
             AnsiConsole.MarkupLine(Constants.Errors.CategoriesNotFound);
             return null;
         }
+
+        IEnumerable<Category> categories = categoriesResult.Value;
 
         return AnsiConsole.Prompt(new SelectionPrompt<Category>()
             .Title(Constants.Prompts.Category)
