@@ -10,8 +10,8 @@ public sealed record TransactionFilterDto
     {
         return t =>
             (string.IsNullOrWhiteSpace(SearchTerm) ||
-             t.Description.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)) &&
-            (!From.HasValue || t.Date >= From.Value) &&
-            (!To.HasValue || t.Date <= To.Value);
+             t.Description.Value.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (!From.HasValue || t.Date.Value >= From.Value) &&
+            (!To.HasValue || t.Date.Value <= To.Value);
     }
 }

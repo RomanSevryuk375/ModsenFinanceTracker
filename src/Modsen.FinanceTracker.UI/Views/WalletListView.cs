@@ -16,7 +16,7 @@ public sealed class WalletListView : IWalletListView
 
         foreach (Wallet wallet in wallets)
         {
-            string balanceColor = wallet.Balance >= 0
+            string balanceColor = wallet.Balance.Amount >= 0
                 ? Constants.Colors.Success
                 : Constants.Colors.Error;
 

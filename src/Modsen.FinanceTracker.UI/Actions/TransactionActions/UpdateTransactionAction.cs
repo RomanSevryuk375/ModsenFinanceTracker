@@ -51,8 +51,8 @@ public sealed class UpdateTransactionAction(
     private static decimal SelectNewAmount(Transaction target)
     {
         return AnsiConsole.Prompt(
-            new TextPrompt<decimal>(Constants.Prompts.NewAmount(target.Amount))
-                .DefaultValue(target.Amount)
+            new TextPrompt<decimal>(Constants.Prompts.NewAmount(target.Amount.Amount))
+                .DefaultValue(target.Amount.Amount)
                 .Validate(a => a > 0
                     ? ValidationResult.Success()
                     : ValidationResult.Error(Constants.Errors.NegativeAmount)));
@@ -61,7 +61,7 @@ public sealed class UpdateTransactionAction(
     private static string SelectNewDescription(Transaction target)
     {
         return AnsiConsole.Prompt(
-            new TextPrompt<string>(Constants.Prompts.NewDescription(target.Description))
-                .DefaultValue(target.Description));
+            new TextPrompt<string>(Constants.Prompts.NewDescription(target.Description.Value))
+                .DefaultValue(target.Description.Value));
     }
 }

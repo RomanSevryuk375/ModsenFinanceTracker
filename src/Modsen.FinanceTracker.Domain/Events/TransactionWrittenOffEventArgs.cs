@@ -1,8 +1,10 @@
+using Modsen.FinanceTracker.Domain.ValueObjects;
+
 namespace Modsen.FinanceTracker.Domain.Events;
 
 public sealed record TransactionWrittenOffEventArgs(
     Guid WalletId,
     string WalletName,
     string Description,
-    decimal Amount,
+    Money Amount,
     DateTime NextExecutionDate);

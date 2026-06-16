@@ -49,7 +49,8 @@ public sealed class DeleteWalletAction(
         return AnsiConsole.Prompt(
             new SelectionPrompt<Wallet>()
                 .Title(Constants.Prompts.DeleteWalletSelection)
-                .UseConverter(w => Constants.Prompts.WalletDisplay(w.Name, w.BaseCurrency, w.Balance))
+                .UseConverter(w => Constants.Prompts.WalletDisplay(
+                    w.Name, w.BaseCurrency, w.Balance.Amount))
                 .AddChoices(choices));
     }
 }

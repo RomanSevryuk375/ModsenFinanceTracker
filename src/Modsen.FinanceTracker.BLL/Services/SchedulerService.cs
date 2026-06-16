@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.BLL.Services;
 
@@ -19,14 +20,19 @@ public sealed class SchedulerService(
         int txCount = 0;
         foreach (Wallet wallet in wallets)
         {
-            bool walletModified = false;
+            bool? walletModified = false;
 
             foreach (RecurringTransactionTemplate template in wallet.Templates)
             {
                 walletModified = WriteOffTransaction(template, wallet, walletModified);
             }
 
-            if (walletModified)
+            if (walletModified is null)
+            {
+                continue;
+            }
+
+            if (walletModified.Value)
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
@@ -41,15 +47,22 @@ public sealed class SchedulerService(
         return Result.Success();
     }
 
-    private bool WriteOffTransaction(RecurringTransactionTemplate template, Wallet wallet, bool walletModified)
+    private bool? WriteOffTransaction(
+        RecurringTransactionTemplate template,
+        Wallet wallet,
+        bool? walletModified)
     {
         if (template.NextExecutionDate <= DateTime.Now)
         {
-            Transaction transaction = factory.CreateTransaction(
+            Transaction? transaction = factory.CreateTransaction(
                 template.Category.Type,
                 template.Amount,
                 template.Description,
                 template.Category);
+            if (transaction is null)
+            {
+                return null;
+            }
 
             Result addResult = wallet.AddTransaction(transaction);
 
@@ -58,6 +71,7 @@ public sealed class SchedulerService(
                 template.MoveToNextPeriod();
 
                 walletModified = true;
+
 
                 OnTransactionWrittenOff?.Invoke(this, new TransactionWrittenOffEventArgs(
                     wallet.Id,

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Modsen.FinanceTracker.BLL.Decorators;
 using Modsen.FinanceTracker.BLL.Factories;
 using Modsen.FinanceTracker.BLL.Services;
-using Modsen.FinanceTracker.BLL.Validators;
 
 namespace Modsen.FinanceTracker.BLL.Extensions;
 
@@ -11,12 +10,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddBLL(this IServiceCollection services, string currency)
     {
-        services.AddSingleton<IValidator<Transaction>, TransactionValidator>();
         services.AddTransient<ITransactionFactory, TransactionFactory>();
 
         services.AddSingleton(sp => new FinanceService(
             sp.GetRequiredService<IWalletRepository>(),
-            sp.GetRequiredService<IValidator<Transaction>>(),
             sp.GetRequiredService<ICurrencyService>(),
             sp.GetRequiredService<IUnitOfWork>(),
             currency));

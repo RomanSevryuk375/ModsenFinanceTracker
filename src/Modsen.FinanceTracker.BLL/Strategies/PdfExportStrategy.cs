@@ -79,7 +79,7 @@ public sealed class PdfExportStrategy : IExportStrategy
 
                             table.Cell()
                                 .PaddingVertical(ReportConstants.Pdf.CellPadding)
-                                .Text(t.Date.ToShortDateString());
+                                .Text(t.Date.Value.ToShortDateString());
                             table.Cell()
                                 .PaddingVertical(ReportConstants.Pdf.CellPadding)
                                 .Text(type).FontColor(color);
@@ -88,7 +88,7 @@ public sealed class PdfExportStrategy : IExportStrategy
                                 ).Text(categoryName);
                             table.Cell()
                                 .PaddingVertical(ReportConstants.Pdf.CellPadding)
-                                .Text(t.Description);
+                                .Text(t.Description.Value);
                             table.Cell()
                                 .PaddingVertical(ReportConstants.Pdf.CellPadding)
                                 .AlignRight().Text($"{sign}{t.Amount:N2}").FontColor(color);

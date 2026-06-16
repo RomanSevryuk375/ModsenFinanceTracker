@@ -1,10 +1,12 @@
-﻿namespace Modsen.FinanceTracker.Domain.Entities;
+using Modsen.FinanceTracker.Domain.ValueObjects;
+
+namespace Modsen.FinanceTracker.Domain.Entities;
 
 public sealed class IncomeTransaction(
-    Guid id, 
-    decimal amount, 
-    string description, 
-    DateTime date, 
+    Guid id,
+    Money amount,
+    TransactionDescription description,
+    TransactionDate date,
     Category category) : Transaction(id, amount, description, date, category) 
 {
 }

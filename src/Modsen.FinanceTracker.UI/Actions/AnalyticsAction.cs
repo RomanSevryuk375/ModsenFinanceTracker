@@ -72,14 +72,14 @@ public sealed class AnalyticsAction(
 
     private static IEnumerable<AnalyticsRowModel> PrepareRowModels(List<ExpenseTransaction> expenses)
     {
-        decimal totalAmount = expenses.Sum(x => x.Amount);
+        decimal totalAmount = expenses.Sum(x => x.Amount.Amount);
 
         return expenses
             .GroupBy(x => x.Category.Id)
             .Select(g =>
             {
                 string categoryName = g.First().Category.Name;
-                decimal groupAmount = g.Sum(x => x.Amount);
+                decimal groupAmount = g.Sum(x => x.Amount.Amount);
 
                 double percent = totalAmount > 0
                     ? ((double)groupAmount / (double)totalAmount) * 100

@@ -50,10 +50,10 @@ public sealed class DocxExportStrategy : IExportStrategy
             string categoryName = t.Category?.Name 
                 ?? ReportConstants.NotAvailable;
 
-            table.Rows[rowIndex].Cells[0].Paragraphs.First().Append(t.Date.ToShortDateString());
+            table.Rows[rowIndex].Cells[0].Paragraphs.First().Append(t.Date.Value.ToShortDateString());
             table.Rows[rowIndex].Cells[1].Paragraphs.First().Append(type);
             table.Rows[rowIndex].Cells[2].Paragraphs.First().Append(categoryName);
-            table.Rows[rowIndex].Cells[3].Paragraphs.First().Append(t.Description);
+            table.Rows[rowIndex].Cells[3].Paragraphs.First().Append(t.Description.Value);
             table.Rows[rowIndex].Cells[4].Paragraphs.First().Append($"{sign}{t.Amount:N2}");
         }
 

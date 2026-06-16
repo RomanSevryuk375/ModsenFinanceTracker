@@ -1,4 +1,5 @@
 using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 
@@ -9,29 +10,24 @@ public abstract class Transaction : IEntity
     public Guid Id { get; init; }
 
     [JsonInclude]
-    public decimal Amount { get; private set; }
+    public Money Amount { get; private set; }
 
     [JsonInclude]
-    public string Description { get; private set; }
+    public TransactionDescription Description { get; private set; }
 
     [JsonInclude]
-    public DateTime Date { get; private set; }
+    public TransactionDate Date { get; private set; }
 
     [JsonInclude]
     public Category Category { get; private set; }
 
-    protected Transaction(Guid id, decimal amount, string description, DateTime date, Category category)
+    protected Transaction(
+        Guid id,
+        Money amount,
+        TransactionDescription description,
+        TransactionDate date,
+        Category category)
     {
-        if (amount <= 0)
-        {
-            throw new ArgumentException("Amount must be strictly positive");
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new ArgumentException("Description is required");
-        }
-
         Id = id;
         Amount = amount;
         Description = description;
@@ -39,15 +35,11 @@ public abstract class Transaction : IEntity
         Category = category;
     }
 
-    public Result UpdateDetails(decimal newAmount, string newDescription)
+    public Result UpdateDetails(Money newAmount, TransactionDescription newDescription)
     {
-        if (newAmount <= 0)
-        {
-            return Result.Fail("Amount must be positive");
-        }
-
         Amount = newAmount;
         Description = newDescription;
+
         return Result.Success();
     }
 }

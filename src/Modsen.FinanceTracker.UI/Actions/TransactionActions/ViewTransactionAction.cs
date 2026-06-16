@@ -71,9 +71,9 @@ public sealed class ViewTransactionAction(
     {
         return transactions.Select(t => new TransactionRowModel(
             t.Id.ToString()[..Constants.UI.GuidShortLength],
-            t.Date.ToShortDateString(),
+            t.Date.Value.ToShortDateString(),
             t.Category?.Name ?? "N/A",
-            t.Description,
+            t.Description.Value,
             FormatAmount(t)
         ));
     }

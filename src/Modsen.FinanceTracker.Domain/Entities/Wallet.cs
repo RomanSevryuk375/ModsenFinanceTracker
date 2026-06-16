@@ -1,4 +1,5 @@
 using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 
@@ -19,7 +20,7 @@ public sealed class Wallet : IEntity
     [JsonInclude]
     public string Name { get; private set; } = string.Empty;
 
-    public decimal Balance => CalculateBalance(InternalTransactions);
+    public Money Balance => CalculateBalance(InternalTransactions, BaseCurrency);
 
     [JsonInclude]
     public string BaseCurrency { get; private set; } = string.Empty;
@@ -70,21 +71,24 @@ public sealed class Wallet : IEntity
         return Result.Success();
     }
 
-    public Result UpdateTransaction(Transaction transaction, decimal newAmount, string newDescription)
+    public Result UpdateTransaction(
+        Transaction transaction,
+        Money newAmount,
+        TransactionDescription newDescription)
     {
 
         if (transaction is ExpenseTransaction)
         {
-            decimal expenseIncrease = newAmount - transaction.Amount;
-            if (Balance - expenseIncrease < 0)
+            Money expenseIncrease = newAmount - transaction.Amount;
+            if (Balance.Amount - expenseIncrease.Amount < 0)
             {
                 return Result.Fail("Cannot update expense: wallet balance would become negative.");
             }
         }
         else if (transaction is IncomeTransaction)
         {
-            decimal incomeDecrease = transaction.Amount - newAmount;
-            if (Balance - incomeDecrease < 0)
+            Money incomeDecrease = transaction.Amount - newAmount;
+            if (Balance.Amount - incomeDecrease.Amount < 0)
             {
                 return Result.Fail("Cannot reduce income: wallet balance would become negative.");
             }
@@ -110,14 +114,16 @@ public sealed class Wallet : IEntity
     }
 
     private bool ImpossibleToRemove(Transaction transaction) =>
-        transaction is IncomeTransaction && (Balance - transaction.Amount < 0);
+        transaction is IncomeTransaction && Balance < transaction.Amount;
 
-    private static decimal CalculateBalance(List<Transaction> transactions)
+    private static Money CalculateBalance(List<Transaction> transactions, string currency)
     {
-        return transactions.OfType<IncomeTransaction>().Sum(x => x.Amount) -
-        transactions.OfType<ExpenseTransaction>().Sum(x => x.Amount);
+        decimal total = transactions.OfType<IncomeTransaction>().Sum(x => x.Amount.Amount) -
+                        transactions.OfType<ExpenseTransaction>().Sum(x => x.Amount.Amount);
+
+        return Money.Create(total, currency).Value;
     }
 
     private bool WouldCauseNegativeBalance(Transaction transaction) =>
-        transaction is ExpenseTransaction && Balance - transaction.Amount < 0;
+        transaction is ExpenseTransaction && Balance < transaction.Amount;
 }

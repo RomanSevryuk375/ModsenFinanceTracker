@@ -1,10 +1,12 @@
+using Modsen.FinanceTracker.Domain.ValueObjects;
+
 namespace Modsen.FinanceTracker.BLL.Interfaces;
 
 public interface ITransactionFactory
 {
-    public Transaction CreateTransaction(
+    public Transaction? CreateTransaction(
         TransactionType type,
-        decimal amount,
-        string description,
+        Money amount,
+        TransactionDescription description,
         Category category);
 }

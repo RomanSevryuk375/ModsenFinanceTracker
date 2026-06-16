@@ -1,4 +1,5 @@
 using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Domain.ValueObjects;
 
 namespace Modsen.FinanceTracker.Domain.Entities;
 
@@ -6,11 +7,11 @@ public class RecurringTransactionTemplate : IEntity
 {
     public Guid Id { get; init; }
     [JsonInclude]
-    public decimal Amount { get; private set; }
+    public Money Amount { get; private set; }
     [JsonInclude]
     public string Name { get; private set; }
     [JsonInclude]
-    public string Description { get; private set; }
+    public TransactionDescription Description { get; private set; }
     [JsonInclude]
     public Period Period { get; private set; }
     [JsonInclude]
@@ -19,12 +20,18 @@ public class RecurringTransactionTemplate : IEntity
     public Category Category { get; private set; }
 
     [JsonConstructor]
-    private RecurringTransactionTemplate() { Description = string.Empty; Name = string.Empty; Category = null!; }
+    private RecurringTransactionTemplate()
+    {
+        Name = null!;
+        Description = null!;
+        Category = null!;
+        Amount = null!; 
+    }
     private RecurringTransactionTemplate(
         Guid id,
-        decimal amount,
+        Money amount,
         string name,
-        string description,
+        TransactionDescription description,
         Period period,
         DateTime nextExecutionDate,
         Category category)
@@ -39,23 +46,13 @@ public class RecurringTransactionTemplate : IEntity
     }
 
     public static Result<RecurringTransactionTemplate> Create(
-        decimal amount,
+        Money amount,
         string name,
-        string description,
+        TransactionDescription description,
         Period period,
         DateTime nextExecutionDate,
         Category category)
     {
-        if(amount <= 0)
-        {
-            return Result.Fail<RecurringTransactionTemplate>("Amount must be strictly positive");
-        }
-
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            return Result.Fail<RecurringTransactionTemplate>("Description is required");
-        }
-
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail<RecurringTransactionTemplate>("Name is required");
@@ -65,7 +62,7 @@ public class RecurringTransactionTemplate : IEntity
             Guid.NewGuid(),
             amount,
             name.Trim(),
-            description.Trim(),
+            description,
             period,
             nextExecutionDate,
             category);
