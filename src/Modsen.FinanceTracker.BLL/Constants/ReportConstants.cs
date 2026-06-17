@@ -1,4 +1,4 @@
-﻿namespace Modsen.FinanceTracker.BLL.Constants;
+namespace Modsen.FinanceTracker.BLL.Constants;
 
 public static class ReportConstants
 {
@@ -12,8 +12,6 @@ public static class ReportConstants
         public const string Category = "Category";
         public const string Description = "Description";
         public const string Amount = "Amount";
-
-        // Для удобства в CSV
         public const string CsvHeader = "Date,Type,Category,Description,Amount";
     }
 

@@ -96,45 +96,4 @@ public sealed class SchedulerServiceTests
         eventFired.Should().BeTrue();
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
-
-    [Fact]
-    public async Task CheckAsyncTemplateDueShouldCreateTransactionAdvancePeriodAndSave()
-    {
-        // Arrange
-        Wallet wallet = Wallet.Create("Main", "USD").Value;
-
-        var income = new IncomeTransaction(Guid.NewGuid(), Money.Create(100m, "USD").Value,
-            TransactionDescription.Create("Deposit").Value, TransactionDate.Create(DateTime.Now).Value, null!);
-        wallet.AddTransaction(income);
-
-        DateTime yesterday = DateTime.Now.AddDays(-1);
-
-        Category category = CreateTestCategory();
-        RecurringTransactionTemplate template = CreateTemplate(yesterday, category);
-        wallet.AddTransactionTemplate(template);
-
-        _walletRepository.GetAllAsync(null, null, null, Arg.Any<CancellationToken>())
-            .Returns(new List<Wallet> { wallet });
-
-        var expectedTransaction = new ExpenseTransaction(
-            Guid.NewGuid(), template.Amount, template.Description, TransactionDate.Create(DateTime.Now).Value, category);
-
-        _transactionFactory.CreateTransaction(Arg.Any<TransactionType>(), Arg.Any<Money>(),
-            Arg.Any<TransactionDescription>(), Arg.Any<Category>())
-            .Returns(expectedTransaction);
-
-        bool eventFired = false;
-        _sut.OnTransactionWrittenOff += (sender, args) => eventFired = true;
-
-        // Act
-        Result result = await _sut.CheckAndProcessRecurringTransactionsAsync(CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        wallet.Transactions.Should().Contain(expectedTransaction);
-        template.NextExecutionDate.Should().BeCloseTo(yesterday.AddMonths(1), TimeSpan.FromMinutes(5));
-
-        eventFired.Should().BeTrue();
-        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
 }

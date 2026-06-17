@@ -1,7 +1,10 @@
+using Modsen.FinanceTracker.BLL.Constants;
+using Modsen.FinanceTracker.BLL.Interfaces;
+using Modsen.FinanceTracker.Domain.Entities;
 using Xceed.Document.NET;
 using Xceed.Words.NET;
 
-namespace Modsen.FinanceTracker.BLL.Strategies;
+namespace Modsen.FinanceTracker.Infrastructure.Strategies;
 
 public sealed class DocxExportStrategy : IExportStrategy
 {

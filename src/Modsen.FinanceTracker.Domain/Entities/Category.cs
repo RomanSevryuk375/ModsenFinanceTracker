@@ -2,10 +2,10 @@ namespace Modsen.FinanceTracker.Domain.Entities;
 
 public sealed class Category : IEntity
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public TransactionType Type { get; set; }
-    public decimal? BudgetLimit { get; set; }
+    public Guid Id { get; init; }
+    public string Name { get; init; }
+    public TransactionType Type { get; init; }
+    public decimal? BudgetLimit { get; init; }
 
     public Category(Guid id, string name, TransactionType type, decimal? budgetLimit)
     {

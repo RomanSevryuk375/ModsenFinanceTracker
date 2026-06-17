@@ -3,7 +3,8 @@ using Modsen.FinanceTracker.Domain.Extensions;
 namespace Modsen.FinanceTracker.BLL.Services;
 
 public sealed class WalletService(
-    IWalletRepository repository) : IWalletService
+    IWalletRepository repository,
+    IUnitOfWork unitOfWork) : IWalletService
 {
     public async Task<Result<IReadOnlyList<Wallet>>> GetAllWallets(
         CancellationToken cancellationToken = default)
@@ -25,6 +26,8 @@ public sealed class WalletService(
 
         await repository.AddAsync(createResult.Value, cancellationToken);
 
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
         return Result.Success();
     }
 
@@ -33,6 +36,8 @@ public sealed class WalletService(
         CancellationToken cancellationToken = default)
     {
         await repository.DeleteAsync(walletId, cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
