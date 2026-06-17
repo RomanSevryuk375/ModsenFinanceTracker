@@ -17,6 +17,7 @@ public sealed class ReportService(IWalletRepository repository) : IReportService
         }
 
         await strategy.ExportAsync(wallet.Transactions, filePath, cancellationToken);
+
         return Result.Success();
     }
 }

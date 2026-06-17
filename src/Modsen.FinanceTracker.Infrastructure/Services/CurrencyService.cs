@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
-using Modsen.FinanceTracker.BLL.DTOs;
 using Modsen.FinanceTracker.BLL.Interfaces;
 using Modsen.FinanceTracker.Domain.Extensions;
+using Modsen.FinanceTracker.Infrastructure.DTOs;
 
 namespace Modsen.FinanceTracker.Infrastructure.Services;
 
