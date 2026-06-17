@@ -11,7 +11,7 @@ public sealed class SchedulerService(
 {
     public event EventHandler<TransactionWrittenOffEventArgs>? OnTransactionWrittenOff;
 
-    public async Task<Result> CheckAndProcessRecurringTransactionsAsync(CancellationToken cancellationToken)
+    public async Task<Result<int>> CheckAndProcessRecurringTransactionsAsync(CancellationToken cancellationToken)
     {
         IEnumerable<Wallet> wallets = await walletRepository.GetAllAsync(
             null, null, null, cancellationToken);
@@ -19,37 +19,31 @@ public sealed class SchedulerService(
         int txCount = 0;
         foreach (Wallet wallet in wallets)
         {
-            bool? walletModified = false;
+            bool walletModified = false;
 
             foreach (RecurringTransactionTemplate template in wallet.Templates)
             {
-                walletModified = WriteOffTransaction(template, wallet, walletModified);
+                if (WriteOffTransaction(template, wallet))
+                {
+                    walletModified = true;
+                    txCount++;
+                }
             }
 
-            if (walletModified is null)
-            {
-                continue;
-            }
-
-            if (walletModified.Value)
+            if (walletModified)
             {
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-
-            txCount++;
         }
 
         logger.LogInformation("Scheduler processed {Count} wallets and executed {TxCount} transactions.",
             wallets.Count(),
-            txCount.ToString());
+            txCount);
 
-        return Result.Success();
+        return Result.Success(txCount);
     }
 
-    private bool? WriteOffTransaction(
-        RecurringTransactionTemplate template,
-        Wallet wallet,
-        bool? walletModified)
+    private bool WriteOffTransaction(RecurringTransactionTemplate template, Wallet wallet)
     {
         if (template.NextExecutionDate <= DateTime.Now)
         {
@@ -58,9 +52,10 @@ public sealed class SchedulerService(
                 template.Amount,
                 template.Description,
                 template.Category);
+
             if (transaction is null)
             {
-                return null;
+                return false; 
             }
 
             Result addResult = wallet.AddTransaction(transaction);
@@ -69,20 +64,17 @@ public sealed class SchedulerService(
             {
                 template.MoveToNextPeriod();
 
-                walletModified = true;
-
-
                 OnTransactionWrittenOff?.Invoke(this, new TransactionWrittenOffEventArgs(
                     wallet.Id,
                     wallet.Name,
                     template.Name,
                     template.Amount,
                     template.NextExecutionDate));
+
+                return true;
             }
         }
 
-        return walletModified;
+        return false;
     }
 }
-
-

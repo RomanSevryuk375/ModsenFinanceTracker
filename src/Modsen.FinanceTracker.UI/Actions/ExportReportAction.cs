@@ -1,4 +1,4 @@
-using Modsen.FinanceTracker.BLL.Strategies;
+using Modsen.FinanceTracker.Infrastructure.Strategies;
 
 namespace Modsen.FinanceTracker.UI.Actions;
 

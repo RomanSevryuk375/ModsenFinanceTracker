@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Modsen.FinanceTracker.BLL.DTOs;
+namespace Modsen.FinanceTracker.Infrastructure.DTOs;
 
 public sealed record ExchangeRateResponse(
     [property: JsonPropertyName("result")] string Status,
